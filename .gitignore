@@ -143,3 +143,4 @@ _deps
 
 # End of https://www.gitignore.io/api/c++,cmake,clion
 
+/.idea/
