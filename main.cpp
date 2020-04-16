@@ -1,19 +1,17 @@
 #include <iostream>
-#include <cstdio>
 #include <omp.h>
 #include <vector>
 #include <cstdlib>
 #include <chrono>
-#include <array>
 
 int main(int argc, char *argv[]) {
-  int iterationNumber = std::stoi(argv[1]);
-  int generatorSeedNumber = std::stoi(argv[2]);
-  int rowNumbers = std::stoi(argv[3]);
-  int columnNumber = std::stoi(argv[4]);
+  int iterationNumber = std::atoi(argv[1]);
+  int generatorSeedNumber = std::atoi(argv[2]);
+  int rowNumbers = std::atoi(argv[3]);
+  int columnNumber = std::atoi(argv[4]);
   int parallelismDegree = 1;
   if(argv[5]){
-    parallelismDegree = std::stoi(argv[5]);
+    parallelismDegree = std::atoi(argv[5]);
   }
 
   srand(generatorSeedNumber);
