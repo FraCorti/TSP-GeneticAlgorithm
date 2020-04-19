@@ -19,9 +19,17 @@ int main(int argc, char *argv[]) {
     parallelismDegree = std::atoi(argv[5]);
   }
 
-  GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
-  //gameOfLife.Sequential();
-  gameOfLife.StandardThreads();
+  std::cout << "C++ threads " << std::endl;
+  for (int threadNumber = 1; threadNumber < 150; threadNumber++) {
+    GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, threadNumber);
+    gameOfLife.StandardThreads();
+  }
 
+  std::cout << "PRAGMA threads " << std::endl;
+  for (int threadNumber = 1; threadNumber < 150; threadNumber++) {
+    GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, threadNumber);
+    gameOfLife.PragmaParallel();
+  }
   return 0;
+
 }

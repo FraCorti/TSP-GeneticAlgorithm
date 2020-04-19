@@ -59,7 +59,7 @@ GameOfLife::GameOfLife(int iteration_number,
       gameOfLifeStart[row * columnsNumbers + column] = rand() % 2;
     }
   }
-  PrintCurrentEpoch();
+  //PrintCurrentEpoch();
 }
 
 //! sequential version
@@ -84,8 +84,9 @@ void GameOfLife::Sequential() {
       }
     }
     Swap();
-    PrintCurrentEpoch();
+    //PrintCurrentEpoch();
   }
+  // PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
   std::cout << "Sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
             << std::endl;
@@ -158,11 +159,12 @@ void GameOfLife::StandardThreads() {
     }
     computationThreads.clear();
     Swap();
-    PrintCurrentEpoch();
+    //PrintCurrentEpoch();
   }
+  PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
-  std::cout << "C++ standard threads time: "
-            << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+            << std::endl;
 
 }
 
@@ -171,6 +173,7 @@ void GameOfLife::PragmaParallel() {
 
   auto start = std::chrono::system_clock::now();
   for (int iteration = 0; iteration < iterationNumber; iteration++) {
+#pragma omp parallel for num_threads(parallelismDegree)
     for (int row = 1; row < rowNumbers - 1; row++) {
 #pragma omp parallel for num_threads(parallelismDegree)
       for (int column = 1; column < columnsNumbers - 1; column++) {
@@ -190,11 +193,12 @@ void GameOfLife::PragmaParallel() {
       }
     }
     Swap();
-    PrintCurrentEpoch();
+    //PrintCurrentEpoch();
   }
+  //PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
-  std::cout << "OpenMP parallel implementation time: "
-            << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+            << std::endl;
 }
 
 //! print current configuration of the board
