@@ -6,7 +6,6 @@
 #include <thread>
 #include "gameOfLife.h"
 
-
 int main(int argc, char *argv[]) {
   if (argc == 1) {
     std::cout << "Usage is " << argv[0]
@@ -19,20 +18,21 @@ int main(int argc, char *argv[]) {
   int rowNumbers = std::atoi(argv[3]);
   int columnNumber = std::atoi(argv[4]);
   int parallelismDegree = 1;
-  if(argv[5]){
+  if (argv[5]) {
     parallelismDegree = std::atoi(argv[5]);
   }
 
-  GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
-
   //! Sequential
-  gameOfLife.Sequential();
+  GameOfLife gameOfLifeSequential(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
+  gameOfLifeSequential.Sequential();
 
-  //! Standard
-  gameOfLife.StandardThreads();
+  //! Standard C++ threads
+  GameOfLife gameOfLifeStandard(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
+  gameOfLifeStandard.StandardThreads();
 
   //! OpenMP
-  gameOfLife.OpenMP();
+  GameOfLife gameOfLifeOpenMP(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
+  gameOfLifeOpenMP.OpenMP();
 
   return 0;
 }

@@ -56,7 +56,7 @@
 \section{Code structure}
 The program has a single class \textit{gameOfLife.h} that expose three public methods \textit{Sequential}, \textit{StandardThreads} and \textit{OpenMP}. The user need to pass from the command line the following parameters: number of iteration, random number generator seed, dimension of the board and the parallelism degree. By default the program compute the sequential version followed by the Fork-Join and the OpenMP. For each version the time spent for computing is printed out on the screen.
 
-In order to provide and efficient implementation the two-dimensional board is saved as a one dimensional \textit{bool*} array, all the index are adjusted to make the computation correctly. After each iteration the update version of the board is swapped using the \textit{std::swap} method. This operation prevent a total copy of the matrix and let the system scale well even with large matrix.
+In order to provide and efficient implementation the two-dimensional board is saved as one dimensional \textit{bool*} array, all the index are adjusted to make the computation correctly. After each iteration the update version of the board is swapped using the \textit{std::swap} method. This operation prevent a total copy of the matrix and let the system scale well even with large matrix.
 
 \section{Measures}
 To understand the performance of the program two metrics related to performance and parallelism, \textit{speedup} and \textit{scalability}, were used as performance indicators. For these metrics the speedup asymptote is given by $f(n) = n $. 
@@ -65,17 +65,17 @@ The \textit{speedup} is the ratio between the best known sequential execution ti
 \begin{equation}
 \textnormal{s(n)} = \frac{T_{seq}}{T_{par}(n)}
 \end{equation}
-Speedup gives a measure of how good is our parallelization with respect to the best sequential computation.
+ and gives a measure of how good is our parallelization with respect to the best sequential computation.
 \subsection{Scalability}
 The \textit{scalability} is the ratio between the parallel execution with parallelism degree equal to 1 and the parallel execution with parallelism degree equal to \textit{n}. This is obtained by the formula:
 \begin{equation}
 \textnormal{scalab(n)} = \frac{T_{par}(1)}{T_{par}(n)}
 \end{equation}
-Scalability measures how efficient is the parallel implementation in obtaining better performance on bigger parallelism degree.
+and measures how efficient is the parallel implementation in obtaining better performance on bigger parallelism degree.
 \section{Results}
 I initially developed a sequential implementation of the program as a baseline. This was done to save the sequential time $T_{seq}$ that was used to compute the speedup curves. After that I developed the parallel version with C++ threads (only) and OpenMP, for each of them I saved $T_{par}(1)$ which is the parallel execution time with parallel degree equal to 1 that was used to compute the scalability curves. 
 
-To obtain good results the board was tested in the Xeon PHI with dimensions of 500x500, 5000x5000 and 10000x10000. For each of these dimensions the zoomed plot is shown on the right side. 
+To obtain good results the program was tested in the Xeon PHI with board's dimensions of 500x500, 5000x5000 and 10000x10000. For each of these dimensions the zoomed plot is shown on the right side. 
 
 
 
@@ -93,21 +93,19 @@ To obtain good results the board was tested in the Xeon PHI with dimensions of 5
 		%\subcaption{Accuracy}
 	\end{minipage}
 	\caption{Speedup 500x500 boards.}
-	\label{500}
+	\label{500Speed}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\begin{minipage}[t]{0.55\linewidth}
 		\includegraphics[width=\linewidth]{5000_standard_speed.png}
-		%\subcaption{MSE}
 	\end{minipage}%
 	\begin{minipage}[t]{0.55\linewidth}
 		\includegraphics[width=\linewidth]{5000_zoomed_speed.png}
-		%\subcaption{Accuracy}
 	\end{minipage}
 	\caption{Speedup 5000x5000 boards.}
-	\label{50000}
+	\label{50000Speed}
 \end{figure}
 
 \begin{figure}[H]
@@ -121,12 +119,55 @@ To obtain good results the board was tested in the Xeon PHI with dimensions of 5
 		%\subcaption{Accuracy}
 	\end{minipage}
 	\caption{Speedup 10000x10000 boards.}
-	\label{10000}
+	\label{10000Speed}
 \end{figure}
 
 \subsection{Scalability curves}
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{500_standard_scal.png}
+		%\subcaption{MSE}
+	\end{minipage}%
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{500_zoomed_scal.png}
+		%\subcaption{Accuracy}
+	\end{minipage}
+	\caption{Scalability 500x500 boards.}
+	\label{500Scal}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{5000_standard_scal.png}
+		%\subcaption{MSE}
+	\end{minipage}%
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{5000_zoomed_scal.png}
+		%\subcaption{Accuracy}
+	\end{minipage}
+	\caption{Scalability 5000x5000 boards.}
+	\label{50000Scal}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{10000_standard_scal.png}
+		%\subcaption{MSE}
+	\end{minipage}%
+	\begin{minipage}[t]{0.55\linewidth}
+		\includegraphics[width=\linewidth]{10000_zoomed_scal.png}
+		%\subcaption{Accuracy}
+	\end{minipage}
+	\caption{Scalability 10000x10000 boards.}
+	\label{10000Scal}
+\end{figure}
 
 \section{Conclusion}
+As we can seen in figure \ref{500Speed} not all the computations can benefit of an high  parallelism degree, with small boards and a high parallelism degree the benefits of adding threads doesn't speed up the computation time obtained to solve the problem. This because the \textit{overhead} taken to setup the parallel computation can exceed the computing time taken to solve the problem and the amount of work given to the worker isn't enough to justify the time spent to spawn them. 
 
+Game of Life with little board dimensions isn't a heavy problem to compute, however if we expand the dimensions we can benefits from a high parallelism degree and obtain a good speedup (nearly sublinear with OpenMP) due to parallel computation, see figure \ref{10000Speed}. 
 
 \end{document}

@@ -29,6 +29,7 @@ class GameOfLife {
                                 const int indexEnd,
                                 const int columns);
  public:
+  ~GameOfLife();
   GameOfLife(int iteration_number,
              int generator_SeedNumber,
              int row_numbers,
@@ -38,6 +39,11 @@ class GameOfLife {
   void StandardThreads();
   void OpenMP();
 };
+
+GameOfLife::~GameOfLife() {
+  delete (gameOfLifeEnd);
+  delete (gameOfLifeStart);
+}
 
 GameOfLife::GameOfLife(int iteration_number,
                        int generator_SeedNumber,
@@ -53,7 +59,7 @@ GameOfLife::GameOfLife(int iteration_number,
   gameOfLifeStart = new bool[rowNumbers * columnsNumbers]{};
   gameOfLifeEnd = new bool[rowNumbers * columnsNumbers]{};
 
-  //! fill up start matrix
+  //! fill up initial matrix
   for (int row = 1; row < rowNumbers - 1; row++) {
     for (int column = 1; column < columnsNumbers - 1; column++) {
       gameOfLifeStart[row * columnsNumbers + column] = rand() % 2;
@@ -76,11 +82,8 @@ void GameOfLife::Sequential() {
             gameOfLifeStart[(row + 1) * columnsNumbers + column - 1] +
             gameOfLifeStart[(row + 1) * columnsNumbers + column] +
             gameOfLifeStart[(row + 1) * columnsNumbers + column + 1];
-        if (counter == 3) {
-          gameOfLifeEnd[(row * columnsNumbers + column)] = true;
-        } else
-          gameOfLifeEnd[(row * columnsNumbers + column)] =
-              counter == 2 && gameOfLifeStart[(row * columnsNumbers + column)];
+        gameOfLifeEnd[row * columnsNumbers + column] =
+            (counter == 3) || (counter == 2 && gameOfLifeStart[row * columnsNumbers + column]);
       }
     }
     Swap();
@@ -112,11 +115,7 @@ void GameOfLife::WorkerComputation(bool *gameOfLifeStart,
         gameOfLifeStart[currentIndex + (columns - 1)] +
         gameOfLifeStart[currentIndex + columns] +
         gameOfLifeStart[currentIndex + (columns + 1)];
-    if (counter == 3) {
-      gameOfLifeEnd[currentIndex] = true;
-    } else
-      gameOfLifeEnd[currentIndex] =
-          counter == 2 && gameOfLifeStart[currentIndex];
+    gameOfLifeEnd[currentIndex] = (counter == 3) || (counter == 2 && gameOfLifeStart[currentIndex]);
   }
 }
 
@@ -161,14 +160,13 @@ void GameOfLife::StandardThreads() {
     PrintCurrentEpoch();
   }
   auto end = std::chrono::system_clock::now();
-  std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-            << std::endl;
+  std::cout << "C++ threads:" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+            << "ms" << std::endl;
 
 }
 
 //! parallel version using OpenMP
 void GameOfLife::OpenMP() {
-
   auto start = std::chrono::system_clock::now();
   for (int iteration = 0; iteration < iterationNumber; iteration++) {
 #pragma omp parallel for num_threads(parallelismDegree)
@@ -183,19 +181,16 @@ void GameOfLife::OpenMP() {
             gameOfLifeStart[(row + 1) * columnsNumbers + column - 1] +
             gameOfLifeStart[(row + 1) * columnsNumbers + column] +
             gameOfLifeStart[(row + 1) * columnsNumbers + column + 1];
-        if (counter == 3) {
-          gameOfLifeEnd[(row * columnsNumbers + column)] = true;
-        } else
-          gameOfLifeEnd[(row * columnsNumbers + column)] =
-              counter == 2 && gameOfLifeStart[(row * columnsNumbers + column)];
+        gameOfLifeEnd[row * columnsNumbers + column] =
+            (counter == 3) || (counter == 2 && gameOfLifeStart[row * columnsNumbers + column]);
       }
     }
     Swap();
     PrintCurrentEpoch();
   }
   auto end = std::chrono::system_clock::now();
-  std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-            << std::endl;
+  std::cout << "OpenMP: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+            << "" << std::endl;
 }
 
 //! print current configuration of the board
