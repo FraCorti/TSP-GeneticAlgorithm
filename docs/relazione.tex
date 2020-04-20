@@ -75,7 +75,7 @@ and measures how efficient is the parallel implementation in obtaining better pe
 \section{Results}
 I initially developed a sequential implementation of the program as a baseline. This was done to save the sequential time $T_{seq}$ that was used to compute the speedup curves. After that I developed the parallel version with C++ threads (only) and OpenMP, for each of them I saved $T_{par}(1)$ which is the parallel execution time with parallel degree equal to 1 that was used to compute the scalability curves. 
 
-To obtain good results the program was tested in the Xeon PHI with the board's dimensions of 500x500, 5000x5000 and 10000x10000. For each of these dimensions the zoomed plot is shown on the right side. 
+To obtain good results the program was tested on the Xeon PHI with board's dimensions of 500x500, 5000x5000 and 10000x10000. For each of these dimensions the zoomed plot is shown on the right side. 
 
 
 
@@ -168,6 +168,6 @@ To obtain good results the program was tested in the Xeon PHI with the board's d
 \section{Conclusion}
 As we can see in figure \ref{500Speed} not all the computations can benefit of an high parallelism degree, with small boards and a high parallelism degree the benefits of adding threads doesn't speed up the computation time obtained to solve the problem. This because the \textit{overhead} taken to set up the parallel computation can exceed the computing time taken to solve the problem and the amount of work given to the worker isn't enough to justify the time spent to spawn them. 
 
-Game of Life with little board dimensions isn't a heavy problem to compute, however if we expand the dimensions we can benefit from a high parallelism degree and obtain a good speedup (nearly sublinear with OpenMP) due to parallel computation, see figure \ref{10000Speed}. 
+Game of Life with little board dimensions isn't a heavy problem to compute, however if we expand the board's dimensions we can benefit from a high parallelism degree and obtain a good speedup (nearly sublinear with OpenMP) due to parallel computation, see figure \ref{10000Speed}. 
 
 \end{document}
