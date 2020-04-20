@@ -7,9 +7,13 @@
 #include "gameOfLife.h"
 
 
-
-
 int main(int argc, char *argv[]) {
+  if (argc == 1) {
+    std::cout << "Usage is " << argv[0]
+              << " numberOfIteration seed N M nw" << std::endl;
+    return (-1);
+  }
+
   int iterationNumber = std::atoi(argv[1]);
   int generatorSeedNumber = std::atoi(argv[2]);
   int rowNumbers = std::atoi(argv[3]);
@@ -19,17 +23,16 @@ int main(int argc, char *argv[]) {
     parallelismDegree = std::atoi(argv[5]);
   }
 
-  std::cout << "C++ threads " << std::endl;
-  for (int threadNumber = 1; threadNumber < 150; threadNumber++) {
-    GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, threadNumber);
-    gameOfLife.StandardThreads();
-  }
+  GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, parallelismDegree);
 
-  std::cout << "PRAGMA threads " << std::endl;
-  for (int threadNumber = 1; threadNumber < 150; threadNumber++) {
-    GameOfLife gameOfLife(iterationNumber, generatorSeedNumber, rowNumbers, columnNumber, threadNumber);
-    gameOfLife.PragmaParallel();
-  }
+  //! Sequential
+  gameOfLife.Sequential();
+
+  //! Standard
+  gameOfLife.StandardThreads();
+
+  //! OpenMP
+  gameOfLife.OpenMP();
+
   return 0;
-
 }

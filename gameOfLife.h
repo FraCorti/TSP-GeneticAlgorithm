@@ -36,7 +36,7 @@ class GameOfLife {
              int parallelism_degree);
   void Sequential();
   void StandardThreads();
-  void PragmaParallel();
+  void OpenMP();
 };
 
 GameOfLife::GameOfLife(int iteration_number,
@@ -59,7 +59,7 @@ GameOfLife::GameOfLife(int iteration_number,
       gameOfLifeStart[row * columnsNumbers + column] = rand() % 2;
     }
   }
-  //PrintCurrentEpoch();
+  PrintCurrentEpoch();
 }
 
 //! sequential version
@@ -84,11 +84,10 @@ void GameOfLife::Sequential() {
       }
     }
     Swap();
-    //PrintCurrentEpoch();
+    PrintCurrentEpoch();
   }
-  // PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
-  std::cout << "Sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
+  std::cout << "Sequential time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << "ms"
             << std::endl;
 }
 
@@ -159,9 +158,8 @@ void GameOfLife::StandardThreads() {
     }
     computationThreads.clear();
     Swap();
-    //PrintCurrentEpoch();
+    PrintCurrentEpoch();
   }
-  PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
   std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
             << std::endl;
@@ -169,7 +167,7 @@ void GameOfLife::StandardThreads() {
 }
 
 //! parallel version using OpenMP
-void GameOfLife::PragmaParallel() {
+void GameOfLife::OpenMP() {
 
   auto start = std::chrono::system_clock::now();
   for (int iteration = 0; iteration < iterationNumber; iteration++) {
@@ -193,9 +191,8 @@ void GameOfLife::PragmaParallel() {
       }
     }
     Swap();
-    //PrintCurrentEpoch();
+    PrintCurrentEpoch();
   }
-  //PrintCurrentEpoch();
   auto end = std::chrono::system_clock::now();
   std::cout << parallelismDegree << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
             << std::endl;
