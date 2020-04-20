@@ -56,7 +56,7 @@
 \section{Code structure}
 The program has a single class \textit{gameOfLife.h} that expose three public methods \textit{Sequential}, \textit{StandardThreads} and \textit{OpenMP}. The user need to pass from the command line the following parameters: number of iteration, random number generator seed, dimension of the board and the parallelism degree. By default the program compute the sequential version followed by the Fork-Join and the OpenMP. For each version the time spent for computing is printed out on the screen.
 
-In order to provide and efficient implementation the two-dimensional board is saved as one dimensional \textit{bool*} array, all the index are adjusted to make the computation correctly. After each iteration the update version of the board is swapped using the \textit{std::swap} method. This operation prevent a total copy of the matrix and let the system scale well even with large matrix.
+In order to provide and efficient implementation the two-dimensional board is saved as one dimensional \textit{bool*} array, all the index are adjusted to make the computation correctly. After each iteration the update version of the board is swapped using the \textit{std::swap} method. This operation prevent a total copy of the matrix and let the system scale well even with large matrix. All the code written is hosted on a public repository named \href{https://github.com/FraCorti/PSD-Assignments}{PSD-Assignments} in GitHub.
 
 \section{Measures}
 To understand the performance of the program two metrics related to performance and parallelism, \textit{speedup} and \textit{scalability}, were used as performance indicators. For these metrics the speedup asymptote is given by $f(n) = n $. 
