@@ -1,4 +1,5 @@
 #include "MasterWorker.h"
+#include "FastflowParallelFor.h"
 
 int main(int argc, char *argv[]) {
   if (argc < 4) {
@@ -29,6 +30,12 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   ff::ffTime(ff::STOP_TIME);
-  std::cout << "Time: " << ff::ffTime(ff::GET_TIME) << " (ms)\n";
+  std::cout << "Master workers time: " << ff::ffTime(ff::GET_TIME) << " (ms)\n";
+
+  ff::ffTime(ff::START_TIME);
+  ParallelFor parallelFor(n1, n2, workersNumber);
+  parallelFor.Run();
+  ff::ffTime(ff::STOP_TIME);
+  std::cout << "Parallel for time: " << ff::ffTime(ff::GET_TIME) << " (ms)\n";
   return 0;
 }

@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ftree-vectorize") # vectorization info -fopt-i
 
 # creating the target SecondAssignmentParallel
 add_executable(SecondAssignmentParallel main.cpp)
-add_library(MasterWorker MasterWorker.h)
+add_library(MasterWorker FastflowParallelFor.h MasterWorker.h)
 
 # set compiler
 target_compile_features(SecondAssignmentParallel PUBLIC cxx_std_17)

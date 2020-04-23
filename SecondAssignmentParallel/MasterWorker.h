@@ -9,6 +9,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
+#include <ff/parallel_for.hpp>
 #include <ff/pipeline.hpp>
 #include <ff/farm.hpp>
 #include <tuple>
@@ -18,9 +19,7 @@ using ull = unsigned long long;
 // see http://en.wikipedia.org/wiki/Primality_test
 static bool is_prime(ull n) {
   if (n <= 3) return n > 1; // 1 is not prime !
-
   if (n % 2 == 0 || n % 3 == 0) return false;
-
   for (ull i = 5; i * i <= n; i += 6) {
     if (n % i == 0 || n % (i + 2) == 0)
       return false;
@@ -49,12 +48,13 @@ struct Worker : ff::ff_node_t<std::pair<ull, ull>, std::vector<ull>> {
 
 //! master node
 struct Master : ff::ff_node_t<std::vector<ull>, std::tuple<ull>> {
+ private:
   const ull startPrimes;
   const ull endPrimes;
   const ull workersNumber;
   size_t nWorkers = 0;
   std::vector<ull> primesFound;
-
+ public:
   Master(ull start_primes,
          ull end_primes,
          ull workers_Number)
@@ -98,7 +98,9 @@ struct Master : ff::ff_node_t<std::vector<ull>, std::tuple<ull>> {
   }
 
   void svc_end() override {
-    sort(primesFound.begin(), primesFound.end());
+    //__gnu_parallel::sort(primesFound.begin(), primesFound.end());   // gnu parallel sort, obsolete in C++17
+    std::sort(primesFound.begin(),
+              primesFound.end());      // can be parallelize with Intel Tbb installed with std::execution::par_unseq
     std::cout << "Found " << primesFound.size() << " primes: ";
     for (auto &&prime: primesFound) {
       std::cout << prime << ", ";
