@@ -9,9 +9,6 @@ int main(int argc, char *argv[]) {
   const ull n2 = std::stoll(argv[2]);
   const ull workersNumber = std::stoll(argv[3]);
 
-  bool print_primes = false;
-  if (argc >= 4) print_primes = (std::string(argv[5]) == "on");
-
   // create master
   Master master(n1, n2, workersNumber);
 
