@@ -66,7 +66,8 @@ struct Master : ff::ff_node_t<std::vector<ull>, std::tuple<ull>> {
 
     // divide works among workers and push to the code the tuple with primes ranges
     if (primeNumbers == nullptr) {
-      ull workerCellsToCompute = std::floor(static_cast<float>(endPrimes - startPrimes) / workersNumber);
+      ull workerCellsToCompute =
+          std::floor(static_cast<float>(endPrimes - startPrimes) / static_cast<float>(workersNumber));
       ull remainedElements = (endPrimes - startPrimes) % workersNumber;
       ull indexStart = startPrimes;
       ull indexEnd;
@@ -74,6 +75,7 @@ struct Master : ff::ff_node_t<std::vector<ull>, std::tuple<ull>> {
       for (size_t iteration = 0; iteration < workersNumber; iteration++) {
         indexEnd = indexStart + workerCellsToCompute;
         ff_send_out(new std::pair(indexStart, indexEnd));
+        indexStart = indexEnd++;
       }
 
       // consider extra elements
