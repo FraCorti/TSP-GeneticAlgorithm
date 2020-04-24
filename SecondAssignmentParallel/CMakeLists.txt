@@ -16,7 +16,7 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -O0 -fsanitize=thread -fstack-check -fstack-protector-strong -fno-omit-frame-pointer -g -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ftree-vectorize") # vectorization info -fopt-info-vec
 
-# creating the target SecondAssignmentParallel
+# creating targets SecondAssignmentParallel and MasterWorker
 add_executable(SecondAssignmentParallel main.cpp)
 add_library(MasterWorker FastflowParallelFor.h MasterWorker.h)
 
@@ -26,7 +26,7 @@ set_target_properties(MasterWorker PROPERTIES
         CXX_STANDARD 17
         LINKER_LANGUAGE CXX)
 
-# link libraries
+# link libraries to main target
 target_link_libraries(SecondAssignmentParallel
         MasterWorker
         OpenMP::OpenMP_CXX

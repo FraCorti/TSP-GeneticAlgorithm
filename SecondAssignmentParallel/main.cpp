@@ -10,10 +10,10 @@ int main(int argc, char *argv[]) {
   const ull n2 = std::stoll(argv[2]);
   const ull workersNumber = std::stoll(argv[3]);
 
-  // create master
+  //! create master node
   Master master(n1, n2, workersNumber);
 
-  // create workers
+  //! create workers
   std::vector<std::unique_ptr<ff::ff_node>> workers;
   for (ull i = 0; i < workersNumber; i++) {
     workers.push_back(std::make_unique<Worker>());
@@ -24,18 +24,20 @@ int main(int argc, char *argv[]) {
   farm.wrap_around();
   // farm.set_scheduling_ondemand();
 
+  //! master worker
   ff::ffTime(ff::START_TIME);
   if (farm.run_and_wait_end() < 0) {
-    ff::error("running farm");
+    //ff::error("running farm");
     return -1;
   }
   ff::ffTime(ff::STOP_TIME);
-  std::cout << "Master workers time: " << ff::ffTime(ff::GET_TIME) << " (ms)\n";
+  std::cout << "Master-worker time: " << " " << ff::ffTime(ff::GET_TIME) << "(ms)\n" << std::endl;
 
+  //! parallel for
   ff::ffTime(ff::START_TIME);
   ParallelFor parallelFor(n1, n2, workersNumber);
   parallelFor.Run();
   ff::ffTime(ff::STOP_TIME);
-  std::cout << "Parallel for time: " << ff::ffTime(ff::GET_TIME) << " (ms)\n";
+  std::cout << "ParallelFor time: " << " " << ff::ffTime(ff::GET_TIME) << "(ms)\n" << std::endl;
   return 0;
 }

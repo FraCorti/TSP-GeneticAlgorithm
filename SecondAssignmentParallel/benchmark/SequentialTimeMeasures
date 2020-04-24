@@ -1,0 +1,27 @@
+SpeedUp:
+
+    500000 Sequential 192.947ms time:
+
+    5000000 Sequential 4987.89ms time:
+
+    50000000 Sequential 136715ms time:
+
+Scalability: 
+
+	500000:
+		ParallelFor: 203.436ms
+		
+		Master worker: 205.613ms
+	
+	5000000:
+		ParallelFor: 5090.01ms
+		
+		Master worker: 5388.2ms
+	
+	50000000:
+		ParallelFor: 133360ms
+		
+		Master worker: 132284ms
+
+
+

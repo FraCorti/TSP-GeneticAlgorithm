@@ -98,9 +98,8 @@ struct Master : ff::ff_node_t<std::vector<ull>, std::tuple<ull>> {
   }
 
   void svc_end() override {
-    //__gnu_parallel::sort(primesFound.begin(), primesFound.end());   // gnu parallel sort, obsolete in C++17
     std::sort(primesFound.begin(),
-              primesFound.end());      // can be parallelize with Intel Tbb installed with std::execution::par_unseq
+              primesFound.end());
     std::cout << "Found " << primesFound.size() << " primes: ";
     for (auto &&prime: primesFound) {
       std::cout << prime << ", ";
