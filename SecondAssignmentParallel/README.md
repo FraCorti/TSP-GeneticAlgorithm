@@ -3,8 +3,8 @@
 This is the second assignment for the class of [Parallel and Distributed Systems](http://didawiki.di.unipi.it/doku.php/magistraleinformaticanetworking/spm/sdpm09support) @Unipi. I developed two implementations for the problem of finding prime numbers among a given range, using different patterns provided by the [FastFlow library](http://calvados.di.unipi.it/).  
 
 The two patterns are:
-* **Master Worker** farm (see file [MasterWorker.hpp](https://github.com/dbarasti/finding_primes/MasterWorker.hpp)) and
-* **Parallel For** (see file [ParallelForExec.hpp](https://github.com/dbarasti/finding_primes/ParallelForExec.hpp))
+* **Master Worker** farm (see file [MasterWorker.h](https://github.com/FraCorti/PSD-Assignments/blob/master/SecondAssignmentParallel/MasterWorker.h)) and
+* **Parallel For** (see file [FastflowParallelFor.h](https://github.com/FraCorti/PSD-Assignments/blob/master/SecondAssignmentParallel/FastflowParallelFor.h))
   
 
 ## Getting Started
@@ -30,29 +30,24 @@ cmake --build .
 ### Running
 The executable can be found in the ```build/``` directory. Just run it with:
 
-```./build/finding_primes``` 
+```./build/SecondAssignmentParallel``` 
 
 
 ## Results
-The experience results are summarized in some plots that express the scalability and the speedup obtained running the code on the Xeon-phi machine.  
-The benchmark depicts two situations:
-* finding primes in the range 1~1mln and
-* finding primes in the range 1~10mln.  
+The experience results are summarized in some plots that express the scalability and the speedup obtained running the code on the Xeon-phi machine (see [benchmark folder](https://github.com/FraCorti/PSD-Assignments/tree/master/SecondAssignmentParallel/benchmark) for more images and data obtained).  
+The benchmark depicts one situation:
+* finding primes in the range 0~50mln
 
-For each scenario I computed the execution time considering 1 up to 250 threads. Following are illustrated the plots with the metrics described. 
+For the scenario I computed the execution time considering 1 up to 250 threads. Following are illustrated the plots with the metrics described. 
 
-![](plotting-and-data/img/speed1mln.png)
+![](benchmark/img/50000000_speed.png)
 
-![](plotting-and-data/img/speed10mln.png)
-
-![](plotting-and-data/img/scal1mln.png)
-
-![](plotting-and-data/img/scal10mln.png)
+![](benchmark/img/50000000_scal.png)
 
 
 ## Plotting
 
-To obtain the data used in the results shown you have to build the project in two different ways: the first by leaving in ```main.cpp```  just the execution of the MasterWorker farm and the second by executing only the ParallelFor. Refer to [main.cpp](https://github.com/dbarasti/finding_primes/main.cpp) to understand what this means in practice.  
+To obtain the data used in the results shown you have to build the project in two different ways: the first by leaving in ```main.cpp```  just the execution of the MasterWorker farm and the second by executing only the ParallelFor. Refer to [main.cpp](https://github.com/FraCorti/PSD-Assignments/blob/master/SecondAssignmentParallel/main.cpp) to understand what this means in practice.  
 The two executables obtained must be put in a folder called ```builds/``` in order for the ```benchmark.sh``` script to work properly. These two executable should be called respectively ```finding_primes_MW``` and ```finding_primes_PF```.  
 
 *To change the namings just edit the variables in *```benchmark.sh```.
