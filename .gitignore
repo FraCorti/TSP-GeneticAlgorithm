@@ -76,6 +76,9 @@
 # CMake
 cmake-build-*/
 
+# Gnuplot 
+*.gp 
+
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
 
