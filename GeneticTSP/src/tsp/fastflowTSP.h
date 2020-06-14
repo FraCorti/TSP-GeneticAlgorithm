@@ -1,0 +1,8 @@
+//
+// Created by checco on 13/06/20.
+//
+
+#ifndef GENETICTSP_SRC_TSP_FASTFLOWTSP_H_
+#define GENETICTSP_SRC_TSP_FASTFLOWTSP_H_
+
+#endif //GENETICTSP_SRC_TSP_FASTFLOWTSP_H_
