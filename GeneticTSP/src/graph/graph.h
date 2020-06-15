@@ -38,7 +38,7 @@ Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
     std::uniform_real_distribution<double> unif(0, 100);
     //std::default_random_engine edgeValueGenerator;
 
-    for (int index = 1; index < nodesNumber; index++) {
+    for (int index = 1; index <= nodesNumber; index++) {
 
       //! initialize first level of map
       nodes.insert(std::make_pair(index, std::unordered_map<Key, Value>()));
