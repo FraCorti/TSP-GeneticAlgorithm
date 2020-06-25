@@ -13,8 +13,8 @@ template<typename Key = int>
 class TSP {
  private:
 
-  //! vector of chromosome
-  std::vector<std::vector<std::pair<Key, double>>> population;
+  //! vector of chromosomes
+  std::vector<std::vector<Key>> population;
 
   std::random_device rd;    // Will be used to obtain a seed for the random number engine
   std::mt19937 gen{rd()};   //Standard mersenne_twister_engine seeded with rd()
@@ -22,34 +22,83 @@ class TSP {
 
   const int generationNumber;
   const int workers;
+  const double mutationRate;
+  const double crossoverRate;
+
   // TODO: is inline useful in template method?
-  inline double generateProbability();
   inline void evaluate(Graph<Key, double> &graph,
                        std::vector<std::pair<double, int>> &chromosomesScoreIndex,
                        double &evaluationsAverage);
-  inline void crossover();
+  inline void mutation(std::vector<std::vector<Key>> &intermediatePopulation);
+  inline void crossover(std::vector<std::vector<Key>> &intermediatePopulation);
   inline void fitness(std::vector<std::pair<double, int>> &chromosomesScoreIndex, double evaluationsAverage);
   inline void printPopulation();
   inline void selection(std::vector<std::pair<double, int>> &chromosomesProbabilityIndex,
-                        std::vector<std::vector<std::pair<Key, double>>> &intermediatePopulation);
-  inline void sortProbabilities();
-  inline void generate();
-  static bool CompareProbability(const std::pair<Key, double> &a, const std::pair<Key, double> &b);
-  static bool CompareChromosome(const std::pair<double, std::vector<std::pair<Key, double>>> &a,
-                                const std::pair<double, std::vector<std::pair<Key, double>>> &b);
+                        std::vector<std::vector<Key>> &intermediatePopulation);
+  inline void generatePopulation(Graph<Key, double> &graph,
+                                 int nodesNumber);
  public:
-  explicit TSP(Graph<Key, double> &graph, int generationNumber = 500, int workers = 1);
+  explicit TSP(Graph<Key, double> &graph,
+               int generationNumber = 500,
+               int workers = 1,
+               double mutationRate = 0.01,
+               double crossoverRate = 0.1);
 };
 
+// TODO: move in a method
 template<typename Key>
-TSP<Key>::TSP(Graph<Key, double> &graph, int generationNumber, int workers) :
-    generationNumber(generationNumber), workers(workers), population(graph.GetNodesNumber()) {
-
+TSP<Key>::TSP(Graph<Key, double> &graph, int generationNumber, int workers, double mutationRate, double crossoverRate) :
+    generationNumber(generationNumber),
+    workers(workers),
+    population(graph.GetNodesNumber()), // TODO: understand how much chromosomes spawn
+    mutationRate(mutationRate),
+    crossoverRate(crossoverRate) {
   int nodesNumber = graph.GetNodesNumber();
 
+  //! generate initial population
+  generatePopulation(graph, nodesNumber);
+
+  //! pairs of <fitness score, chromosomeIndex>
+  std::vector<std::pair<double, int>> chromosomesScoreIndex(nodesNumber);
+  std::vector<std::vector<Key>> intermediatePopulation(nodesNumber);
+  double evaluationsAverage = 0;
+
+  //! start genetic algorithm
+  for (int generation = 1; generation <= generationNumber; generation++) {
+    //std::cout << "Generation: " << generation << std::endl;
+    evaluate(graph, chromosomesScoreIndex, evaluationsAverage);
+    fitness(chromosomesScoreIndex, evaluationsAverage);
+    selection(chromosomesScoreIndex, intermediatePopulation);
+    crossover(intermediatePopulation);
+    mutation(intermediatePopulation);
+
+    //! prepare for next generation
+    evaluationsAverage = 0;
+    std::swap(intermediatePopulation, population);  //TODO: check if works properly
+    intermediatePopulation.clear();
+    chromosomesScoreIndex.clear();
+    chromosomesScoreIndex.resize(nodesNumber);
+    intermediatePopulation.resize(nodesNumber);
+  }
+  printPopulation();
+}
+
+/*** Generate initial population. This is done by first creating vectors of pair<Key, probability>.
+ *   Then all these vectors of pairs are sorted based on the random probability spawned to obtain
+ *   the chromosome. In the end the population data structure is filled with copying the vector
+ *   by taking only the Key element using std::transform
+ *
+ * @param initialPopulation Reference to the population data structure. Passed empty and later filled with chromosomes
+ */
+template<typename Key>
+void TSP<Key>::generatePopulation(Graph<Key, double> &graph,
+                                  int nodesNumber) {
+  std::vector<std::vector<std::pair<Key, double>>>
+      populationToSort(nodesNumber);  // TODO: understand how much chromosomes spawn
+
   //! generate first population
-  std::for_each(population.begin(),
-                population.end(),
+  std::for_each(populationToSort.begin(),
+                populationToSort.end(),
                 [&](std::vector<std::pair<Key, double>> &chromosome) {
                   chromosome.resize(nodesNumber);
                   auto i = graph.GetMapIterator();
@@ -59,35 +108,66 @@ TSP<Key>::TSP(Graph<Key, double> &graph, int generationNumber, int workers) :
                                 chromosome.end(),
                                 [&](std::pair<Key, double> &cell) {
                                   cell.first = i->first;
-                                  cell.second = generateProbability();
+                                  cell.second = unif(gen);
                                   i++;
                                 });
                 });
+  /*
+   //! print populationToSort for test purpose
+   std::for_each(populationToSort.begin(),
+                 populationToSort.end(),
+                 [&](std::vector<std::pair<Key, double>> &chromosome) {
 
-  //! pairs of <fitness score, chromosomeIndex>
-  std::vector<std::pair<double, int>> chromosomesScoreIndex(nodesNumber);
+                   std::for_each(chromosome.begin(),
+                                 chromosome.end(),
+                                 [&](std::pair<Key, double> &cell) {
+                                   std::cout << "Key: " << cell.first << " Value: " << cell.second << std::endl;
+                                 });
+                   std::cout << std::endl;
+                 });
+   */
 
-  std::vector<std::vector<std::pair<Key, double>>> intermediatePopulation(population.size());
-  double evaluationsAverage = 0;
+  //! Iterate over the chromosomes and sorting in descending order (ordine decrescente) over to the probability
+  std::for_each(populationToSort.begin(),
+                populationToSort.end(),
+                [&](std::vector<std::pair<Key, double>> &chromosome) {
+                  std::sort(chromosome.begin(),
+                            chromosome.end(),
+                            [&](const std::pair<Key, double> &a, const std::pair<Key, double> &b) {
+                              return a.second > b.second;
+                            });
+                });
+  /*
+  //! print populationToSort for test purpose
+  std::for_each(populationToSort.begin(),
+                populationToSort.end(),
+                [&](std::vector<std::pair<Key, double>> &chromosome) {
 
-  //! start genetic algorithm
-  for (int generation = 1; generation <= generationNumber; generation++) {
-    sortProbabilities();
-    evaluate(graph, chromosomesScoreIndex, evaluationsAverage);
-    fitness(chromosomesScoreIndex, evaluationsAverage);
-    selection(chromosomesScoreIndex, intermediatePopulation);
-    crossover();
-    generate();
+                  std::for_each(chromosome.begin(),
+                                chromosome.end(),
+                                [&](std::pair<Key, double> &cell) {
+                                  std::cout << "Key: " << cell.first << " Value: " << cell.second << std::endl;
+                                });
+                  std::cout << std::endl;
+                }); */
 
-    evaluationsAverage = 0;
-    std::swap(intermediatePopulation, population);  //TODO: check if works properly
-  }
-  printPopulation();
+  //! generate first population by taking Key values of each chromosomes generated
+  auto populationToSortIt = populationToSort.begin();
+  std::for_each(population.begin(),
+                population.end(),
+                [&](std::vector<Key> &chromosome) {
+                  std::transform(populationToSortIt->begin(),
+                                 populationToSortIt->end(),
+                                 std::back_inserter(chromosome),
+                                 [](const std::pair<Key, double> &pair) {
+                                   return pair.first;
+                                 });
+                  populationToSortIt++;
+                });
 }
 
 /*** For each chromosome compute the fitness score
- *   by summing all the edges value then sort population vector
- *   over the fitness score value
+ *   by summing all the edges value
  */
 template<typename Key>
 void TSP<Key>::evaluate(Graph<Key, double> &graph,
@@ -95,34 +175,31 @@ void TSP<Key>::evaluate(Graph<Key, double> &graph,
                         double &evaluationsAverage) {
 
   int chromosomeSize = population.begin()->size();
+  auto chromosomesScoreIndexIt = chromosomesScoreIndex.begin();
   int iteratorIndex = 0;
   std::for_each(population.begin(),
                 population.end(),
-                [&](std::vector<std::pair<Key, double>> &chromosome) {
+                [&](std::vector<Key> &chromosome) {
                   double chromosomeScore = 0;
-
-                  // TODO: can be done with two iterator (better?)
                   for (int i = 0; i < chromosomeSize - 1; i++) {
-                    double edgeValue = graph.GetEdgeValue(chromosome[i].first, chromosome[i + 1].first);
-                    chromosomeScore += edgeValue;
+                    chromosomeScore += graph.GetEdgeValue(chromosome[i], chromosome[i + 1]);
                   }
-
                   //! retrieve last edge value and store fitness score
-                  chromosomesScoreIndex[iteratorIndex].first += (chromosomeScore
-                      + graph.GetEdgeValue(chromosome[0].first, chromosome[chromosomeSize - 1].first));
+                  chromosomesScoreIndexIt->first += chromosomeScore
+                      + graph.GetEdgeValue(chromosome[0], chromosome[chromosomeSize - 1]);
+                  chromosomesScoreIndexIt->second = iteratorIndex;
                   chromosomesScoreIndex[iteratorIndex].second = iteratorIndex;
 
                   evaluationsAverage += chromosomesScoreIndex[iteratorIndex].first;
+                  chromosomesScoreIndexIt++;
                   iteratorIndex++;
                 });
-
   evaluationsAverage /= chromosomesScoreIndex.size();
 }
 
 /*** Compute reproductive opportunity for each pair of chromosomesScoreIndex.
  *   This is done dividing the score (in our case the length of the path)
  *   by the average score obtained
- *
  */
 template<typename Key>
 void TSP<Key>::fitness(std::vector<std::pair<double, int>> &chromosomesScoreIndex, double evaluationsAverage) {
@@ -163,12 +240,11 @@ void TSP<Key>::fitness(std::vector<std::pair<double, int>> &chromosomesScoreInde
  */
 template<typename Key>
 void TSP<Key>::selection(std::vector<std::pair<double, int>> &chromosomesProbabilityIndex,
-                         std::vector<std::vector<std::pair<Key, double>>> &intermediatePopulation) {
+                         std::vector<std::vector<Key>> &intermediatePopulation) {
 
   double probabilitiesSum = 0;
   std::vector<double> randomProbabilities(chromosomesProbabilityIndex.size());
-  std::vector<int> indexNewPopulation;
-  indexNewPopulation.reserve(chromosomesProbabilityIndex.size());
+  std::vector<int> indexNewPopulation(chromosomesProbabilityIndex.size());
 
   //! divide the probability space between the chromosome over their reproduction factor
   std::for_each(chromosomesProbabilityIndex.begin(),
@@ -178,26 +254,26 @@ void TSP<Key>::selection(std::vector<std::pair<double, int>> &chromosomesProbabi
                   chromosome.first = probabilitiesSum;
                 });
   /*
-  //! print chromosome index with probability for test purpose
-  std::for_each(chromosomesProbabilityIndex.begin(),
-                chromosomesProbabilityIndex.end(), [&](std::pair<double, int> &currentIndex) {
-        std::cout << "Probability: " << currentIndex.first << " Index: " << currentIndex.second << std::endl;
-      }); */
+   //! print chromosome index with probability for test purpose
+   std::for_each(chromosomesProbabilityIndex.begin(),
+                 chromosomesProbabilityIndex.end(), [&](std::pair<double, int> &currentIndex) {
+         std::cout << "Probability: " << currentIndex.first << " Index: " << currentIndex.second << std::endl;
+       }); */
 
   //! generate random numbers inside probability space and sort them
   std::uniform_real_distribution<double> probabilitySpaceInterval(0, probabilitiesSum);
-  std::for_each(randomProbabilities.begin(),
-                randomProbabilities.end(), [&](double &currentProbability) {
-        currentProbability = probabilitySpaceInterval(gen);
-      });
+  std::generate(randomProbabilities.begin(),
+                randomProbabilities.end(),
+                [&]() { return probabilitySpaceInterval(gen); });
   std::sort(randomProbabilities.begin(), randomProbabilities.end());
 
   //! fill the vector of new population indexes
   auto randomProbabilitiesIt = randomProbabilities.begin();
+  auto indexNewPopulationIt = indexNewPopulation.begin();
   for (std::pair<double, int> &chromosome: chromosomesProbabilityIndex) {
     for (; randomProbabilitiesIt != randomProbabilities.end() && *randomProbabilitiesIt <= chromosome.first;
-           randomProbabilitiesIt++) {
-      indexNewPopulation.push_back(chromosome.second);
+           randomProbabilitiesIt++, indexNewPopulationIt++) {
+      *indexNewPopulationIt = chromosome.second;
     }
   }
 
@@ -218,9 +294,6 @@ void TSP<Key>::selection(std::vector<std::pair<double, int>> &chromosomesProbabi
         populationIter++;
       });
 
-  /*
-  std::cout << "population after swap "<< std::endl;
-  printPopulation(); */
 
   /*
   //! print generated probability for test purpose
@@ -237,70 +310,146 @@ void TSP<Key>::selection(std::vector<std::pair<double, int>> &chromosomesProbabi
       }); */
 }
 
-/***
- *
+/*** Implement crossover by picking up two random indexes in the list i and j with i<j and substituting the segment
+ *   from i to j for each pair of chromosomes in the population
  */
 template<typename Key>
-void TSP<Key>::generate() {
+void TSP<Key>::crossover(std::vector<std::vector<Key>> &intermediatePopulation) {
 
-}
+  std::random_shuffle(intermediatePopulation.begin(), intermediatePopulation.end());
+  std::uniform_real_distribution<double> indexSpaceInterval(0, intermediatePopulation.begin()->size() - 1);
+  std::vector<std::vector<Key>> crossoverPopulation(intermediatePopulation.size());
 
-/***
- *
- */
-template<typename Key>
-void TSP<Key>::crossover() {
+  //! swapping indexes sorted in increasing order
+  std::pair<int, int> swappingIndexes(indexSpaceInterval(gen), indexSpaceInterval(gen));
+  if (swappingIndexes.first > swappingIndexes.second) {
+    std::swap(swappingIndexes.first, swappingIndexes.second);
+  }
 
-}
+  //! apply crossover and save the results in crossoverPopulation
+  auto intermediatePopulationNextIt = intermediatePopulation.begin() + 1;
+  auto intermediatePopulationIt = intermediatePopulation.begin();
+  auto crossoverPopulationIt = crossoverPopulation.begin();
 
-template<typename Key>
-double TSP<Key>::generateProbability() {
-  return unif(gen);
-}
-
-/*** Iterate over the chromosomes and sorting in descending order
- *   over to the probability
- */
-template<typename Key>
-void TSP<Key>::sortProbabilities() {
-  std::for_each(population.begin(),
-                population.end(),
-                [&](std::vector<std::pair<Key, double>> &chromosome) {
-                  std::sort(chromosome.begin(),
-                            chromosome.end(),
-                            [&](const std::pair<Key, double> &a, const std::pair<Key, double> &b) {
-                              return a.second > b.second;
-                            });
-                });
-}
-
-template<typename Key>
-void TSP<Key>::printPopulation() {
-  //! print current population
-  std::for_each(population.begin(),
-                population.end(),
-                [&](std::vector<std::pair<Key, double>> &chromosome) {
+  /*
+  //! print intermediate population before crossover for test purpose
+  std::for_each(intermediatePopulation.begin(),
+                intermediatePopulation.end(),
+                [&](std::vector<Key> &chromosome) {
                   std::for_each(chromosome.begin(),
                                 chromosome.end(),
-                                [&](std::pair<Key, double> &cell) {
-                                  std::cout << cell.first << " " << cell.second << std::endl;
+                                [&](Key &cell) {
+                                  std::cout << cell << std::endl;
                                 });
                   std::cout << std::endl;
                 });
+                */
+
+  //! Crossover operation between first and last element of the intermediate population
+  std::copy(intermediatePopulation.rbegin()->begin() + swappingIndexes.first,
+            intermediatePopulation.rbegin()->begin() + swappingIndexes.second + 1,
+            std::back_inserter(*crossoverPopulationIt));
+  std::copy_if(intermediatePopulationIt->begin(),
+               intermediatePopulationIt->end(),
+               std::back_inserter(*crossoverPopulationIt),
+               [&](Key &currentKey) {
+                 //! return true if the element is present in the current crossover chromosome
+                 return
+                     std::find(crossoverPopulationIt->begin(), crossoverPopulationIt->end(), currentKey)
+                         == crossoverPopulationIt->end();
+               });
+  crossoverPopulationIt++;
+
+  for (; intermediatePopulationNextIt != intermediatePopulation.end(); intermediatePopulationNextIt++) {
+    std::copy(intermediatePopulationNextIt->begin() + swappingIndexes.first,
+              intermediatePopulationNextIt->begin() + swappingIndexes.second + 1,
+              std::back_inserter(*crossoverPopulationIt));
+    std::copy_if(intermediatePopulationNextIt->begin(),
+                 intermediatePopulationNextIt->end(),
+                 std::back_inserter(*crossoverPopulationIt),
+                 [&](Key &currentKey) {
+                   //! return true if the element is present in the current crossover chromosome
+                   return
+                       std::find(crossoverPopulationIt->begin(), crossoverPopulationIt->end(), currentKey)
+                           == crossoverPopulationIt->end();
+                 });
+
+    intermediatePopulationIt++;
+    crossoverPopulationIt++;
+  }
+
+  std::swap(crossoverPopulation, intermediatePopulation);
+
+  /*
+  //! print intermediate population after crossover for test purpose
+  std::for_each(intermediatePopulation.begin(),
+                intermediatePopulation.end(),
+                [&](std::vector<Key> &chromosome) {
+                  std::for_each(chromosome.begin(),
+                                chromosome.end(),
+                                [&](Key &cell) {
+                                  std::cout << cell << std::endl;
+                                });
+                  std::cout << std::endl;
+                });*/
+  /*
+ //! iterate over the intermediate population and do crossover
+ std::for_each(swappingIndexes.begin(),
+               swappingIndexes.end(), [&](std::pair<int, int> &swappingIndexes) {
+           std::cout << "First: " << swappingIndexes.first << " Last: " << swappingIndexes.second << std::endl;
+     }); */
 }
 
-/*** Compare two pair of the form <nodeKey, propability>
+/*** Mutate the chromosome by swapping their inner components according to mutation rate
  *
- * @return
+ * @param intermediatePopulation
  */
 template<typename Key>
-bool TSP<Key>::CompareProbability(const std::pair<Key, double> &a, const std::pair<Key, double> &b) {
-  return (a.second > b.second);
+void TSP<Key>::mutation(std::vector<std::vector<Key>> &intermediatePopulation) {
+  std::uniform_real_distribution<double> mutationEvent(0, 1);
+  std::uniform_int_distribution<int> randomIndexes(0, intermediatePopulation.begin()->size() - 1);
+
+  std::for_each(intermediatePopulation.begin(),
+                intermediatePopulation.end(),
+                [&](std::vector<Key> &chromosome) {
+                  /*
+                  //! print before mutation for test purpose
+                  std::for_each(chromosome.begin(),
+                                chromosome.end(), [&](std::pair<Key, double> &currentIndex) {
+                        std::cout << "Index: " << currentIndex.first << " Probability: " << currentIndex.second
+                                  << std::endl;
+                      }); */
+                  //!  swap two random indexes of the chromosomes
+                  if (mutationEvent(gen) <= mutationRate) {
+                    std::swap(chromosome[randomIndexes(gen)], chromosome[randomIndexes(gen)]);
+                  }
+                  /*
+                  //! print after mutation for test purpose
+                  std::for_each(chromosome.begin(),
+                                chromosome.end(), [&](std::pair<Key, double> &currentIndex) {
+                        std::cout << "Index: " << currentIndex.first << " Probability: " << currentIndex.second
+                                  << std::endl;
+                      });
+                      */
+                });
 }
 
+/*** Print population for test purpose
+ *
+ */
 template<typename Key>
-bool TSP<Key>::CompareChromosome(const std::pair<double, std::vector<std::pair<Key, double>>> &a,
-                                 const std::pair<double, std::vector<std::pair<Key, double>>> &b) {
-  return (a.first > b.first);
+void TSP<Key>::printPopulation() {
+  //! print current population
+  std::cout << "Current population " << std::endl;
+  std::for_each(population.begin(),
+                population.end(),
+                [&](std::vector<Key> &chromosome) {
+                  std::for_each(chromosome.begin(),
+                                chromosome.end(),
+                                [&](Key &cell) {
+                                  std::cout << cell << std::endl;
+                                });
+                  std::cout << std::endl;
+                });
 }
 #endif //GENETICTSP_SRC_TSP_TSP_H_

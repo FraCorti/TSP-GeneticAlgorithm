@@ -5,6 +5,7 @@
 #ifndef GENETICTSP_SRC_GRAPH_GRAPH_H_
 #define GENETICTSP_SRC_GRAPH_GRAPH_H_
 
+#include <algorithm>
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -41,8 +42,10 @@ Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
     for (int index = 1; index <= nodesNumber; index++) {
 
       //! initialize first level of map
-      nodes.insert(std::make_pair(index, std::unordered_map<Key, Value>()));
+      nodes.insert(std::make_pair( index, std::unordered_map<Key, Value>()));
+      nodes[index].reserve(nodesNumber - (index + 1));
 
+      //! fill inner map
       for (int currentIndex = index + 1; currentIndex <= nodesNumber; currentIndex++) {
         nodes[index].insert(std::make_pair(currentIndex, unif(gen)));
       }
@@ -70,7 +73,7 @@ Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
 template<typename Key, typename Value>
 Value Graph<Key, Value>::GetEdgeValue(Key startNode, Key endNode) {
   // case is a complete graph (check both nodes to obtain edge value)
-  return (nodes[startNode][endNode]) ? nodes[startNode][endNode] : nodes[endNode][startNode];
+  return (nodes[startNode].count(endNode)) ? nodes[startNode][endNode] : nodes[endNode][startNode];
 }
 
 template<typename Key, typename Value>
