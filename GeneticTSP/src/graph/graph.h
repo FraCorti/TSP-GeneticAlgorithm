@@ -50,7 +50,7 @@ Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
         nodes[index].insert(std::make_pair(currentIndex, unif(gen)));
       }
     }
-
+    /*
     //! print map for test purpose
     for (auto exIt = nodes.begin(); exIt != nodes.end(); exIt++) {
       std::cout << "First key is: " << exIt->first << std::endl;
@@ -59,7 +59,7 @@ Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
                   << " Value:  " << innerIt->second << std::endl;
       }
       std::cout << std::endl;
-    }
+    }*/
 
   } else {
     // parse file and construct the graph
