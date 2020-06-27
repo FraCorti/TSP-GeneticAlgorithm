@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(GeneticTSP VERSION 1.0
-        DESCRIPTION "Parallel final project"
+        DESCRIPTION "TSP Genetic Algorithm"
         LANGUAGES CXX)
 
 # find package needed by the project
@@ -23,11 +23,11 @@ add_library(GeneticAlgorithms
         src/graph/graph.h
         src/tsp/sequentialTSP.h
         src/tsp/parallelTSP.h
-        src/tsp/fastflowTSP.h src/tsp/tsp.h)
+        src/tsp/fastflowTSP.h
+        src/tsp/geneticAlgorithm.h)
 
 # set compiler
 set_property(TARGET GeneticTSP PROPERTY CXX_STANDARD 17)
-# target_compile_features(GeneticTSP PUBLIC cxx_std_17)
 set_target_properties(GeneticAlgorithms PROPERTIES
         CXX_STANDARD 17
         LINKER_LANGUAGE CXX)

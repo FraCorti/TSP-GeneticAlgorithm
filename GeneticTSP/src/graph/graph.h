@@ -10,13 +10,18 @@
 #include <unordered_map>
 #include <iostream>
 #include <random>
+#include <type_traits>
 
 template<typename Key = int, typename Value = double>
 class Graph {
  private:
   std::unordered_map<Key, std::unordered_map<Key, Value>> nodes;
+
+  std::random_device rd;    // Will be used to obtain a seed for the random number engine
+  std::mt19937 gen{rd()};   //Standard mersenne_twister_engine seeded with rd()
+
  public:
-  explicit Graph(int nodesNumber, const std::string &filepath = "none");
+  explicit Graph(int nodesNumber, int seed = 0, const std::string &filepath = "none");
   Value GetEdgeValue(Key startNode, Key endNode);
   int GetNodesNumber() const;
   auto GetMapIterator() const;
@@ -30,23 +35,25 @@ class Graph {
  * @param filepath
  */
 template<typename Key, typename Value>
-Graph<Key, Value>::Graph(int nodesNumber, const std::string &filepath) {
+Graph<Key, Value>::Graph(int nodesNumber, int seed, const std::string &filepath) {
   nodes.reserve(nodesNumber);
+  if(seed){
+    gen.seed(seed);
+  }
 
   if (filepath == "none") {
-    std::random_device rd;    // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd());   //Standard mersenne_twister_engine seeded with rd()
+
     std::uniform_real_distribution<double> unif(0, 100);
     //std::default_random_engine edgeValueGenerator;
 
-    for (int index = 1; index <= nodesNumber; index++) {
+    for (size_t index = 1; index <= nodesNumber; index++) {
 
       //! initialize first level of map
-      nodes.insert(std::make_pair( index, std::unordered_map<Key, Value>()));
+      nodes.insert(std::make_pair(index, std::unordered_map<Key, Value>()));
       nodes[index].reserve(nodesNumber - (index + 1));
 
       //! fill inner map
-      for (int currentIndex = index + 1; currentIndex <= nodesNumber; currentIndex++) {
+      for (size_t currentIndex = index + 1; currentIndex <= nodesNumber; currentIndex++) {
         nodes[index].insert(std::make_pair(currentIndex, unif(gen)));
       }
     }
