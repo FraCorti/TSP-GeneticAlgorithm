@@ -5,28 +5,20 @@
 #ifndef GENETICTSP_SRC_TSP_SEQUENTIALTSP_H_
 #define GENETICTSP_SRC_TSP_SEQUENTIALTSP_H_
 
-#include <vector>
 #include "geneticAlgorithm.h"
-#include <functional>
-#include <chrono>
-
-//! let the user decide the precision of intermediate results
-using precision = double;
 
 template<typename Key = int, typename Value = double>
 class TSPSequential : public GeneticAlgorithm {
  private:
-
-  //! vector of chromosomes
+ //! vector of chromosomes
   std::vector<std::vector<Key>> population;
-
   std::random_device rd;    // Will be used to obtain a seed for the random number engine
   std::mt19937 gen{rd()};   //Standard mersenne_twister_engine seeded with rd()
   std::uniform_real_distribution<double> unif{0, 1};
   Graph<Key, Value> &graph;
 
   void evaluate(Graph<Key, Value> &graph,
-                std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
+                std::vector<std::pair<precision , int>> &chromosomesScoreIndex,
                 double &evaluationsAverage);
   void mutation(std::vector<std::vector<Key>> &intermediatePopulation, double mutationRate);
   void crossover(std::vector<std::vector<Key>> &intermediatePopulation, double crossoverRate);
@@ -78,12 +70,13 @@ void TSPSequential<Key, Value>::Run(const int chromosomeNumber,
   //! start genetic algorithm
   for (size_t generation = 1; generation <= generationNumber; generation++) {
     evaluate(graph, chromosomesScoreIndex, evaluationsAverage);
+
     fitness(chromosomesScoreIndex, evaluationsAverage);
-    printBestSolution(graph, chromosomesScoreIndex);  // to plot the convergence
+    //printBestSolution(graph, chromosomesScoreIndex);  // plot the convergence
     selection(chromosomesScoreIndex, intermediatePopulation);
+
     crossover(intermediatePopulation, crossoverRate);
     mutation(intermediatePopulation, mutationRate);
-
     //! setup next generation
     evaluationsAverage = 0;
     population.swap(intermediatePopulation);
@@ -108,21 +101,30 @@ void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
       populationToSort(chromosomeNumber);
 
   int nodesNumber = graph.GetNodesNumber();
+
   //! generate first population
   std::for_each(populationToSort.begin(),
                 populationToSort.end(),
-                [&](std::vector<std::pair<Key, Value>> &chromosome) {
+                [&](std::vector<std::pair<Key, Value>> &chromosome) -> void {
                   chromosome.resize(nodesNumber);
                   auto i = graph.GetMapIterator();
 
                   //! create chromosome probabilities
                   std::for_each(chromosome.begin(),
                                 chromosome.end(),
-                                [&](std::pair<Key, Value> &cell) {
+                                [&](std::pair<Key, Value> &cell) -> void {
                                   cell.first = i->first;
                                   cell.second = unif(gen);
                                   i++;
                                 });
+
+                  //! sorting the chromosome in descending order over the probability (move out if you want to parallelize)
+                  std::sort(chromosome.begin(),
+                            chromosome.end(),
+                            [](const std::pair<Key, Value> &a, const std::pair<Key, Value> &b) -> bool {
+                              return a.second > b.second;
+                            });
+
                 });
   /*
    //! print populationToSort for test purpose
@@ -139,16 +141,6 @@ void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
                  });
    */
 
-  //! Iterate over the chromosomes and sorting in descending order (ordine decrescente) over to the probability
-  std::for_each(populationToSort.begin(),
-                populationToSort.end(),
-                [&](std::vector<std::pair<Key, Value>> &chromosome) {
-                  std::sort(chromosome.begin(),
-                            chromosome.end(),
-                            [&](const std::pair<Key, Value> &a, const std::pair<Key, Value> &b) {
-                              return a.second > b.second;
-                            });
-                });
   /*
   //! print populationToSort for test purpose
   std::for_each(populationToSort.begin(),
@@ -167,17 +159,18 @@ void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
   auto populationToSortIt = populationToSort.begin();
   std::for_each(population.begin(),
                 population.end(),
-                [&](std::vector<Key> &chromosome) {
+                [&populationToSortIt](std::vector<Key> &chromosome) {
                   std::transform(populationToSortIt->begin(),
                                  populationToSortIt->end(),
                                  std::back_inserter(chromosome),
-                                 [](const std::pair<Key, Value> &pair) {
+                                 [](const std::pair<Key, Value> &pair) -> Key {
                                    return pair.first;
                                  });
                   populationToSortIt++;
                 });
   //auto end = std::chrono::system_clock::now();
-  //std::cout << "Generation time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  //std::cout << "Generation sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  //printPopulation();
 
 }
 
@@ -186,15 +179,15 @@ void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
  */
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
-                                         std::vector<std::pair<double, int>> &chromosomesScoreIndex,
-                                         double &evaluationsAverage){
+                                         std::vector<std::pair<precision , int>> &chromosomesScoreIndex,
+                                         double &evaluationsAverage) {
   //auto start = std::chrono::system_clock::now();
   int chromosomeSize = population.begin()->size();
   auto chromosomesScoreIndexIt = chromosomesScoreIndex.begin();
-  int currentChromosomePosition = 0;
+  int currentChromosomePosition = 0; // TODO: is this useful (maybe use std::iota on second comp ?)
   std::for_each(population.begin(),
                 population.end(),
-                [&](std::vector<Key> &chromosome) {
+                [&](const std::vector<Key> &chromosome) {
                   double chromosomeScore = 0;
                   for (int i = 0; i < chromosomeSize - 1; i++) {
                     chromosomeScore += graph.GetEdgeValue(chromosome.at(i), chromosome.at(i + 1));
@@ -209,8 +202,13 @@ void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
                   currentChromosomePosition++;
                 });
   evaluationsAverage /= chromosomesScoreIndex.size();
+  /*
+  std::cout <<"Evaluation average: "<< evaluationsAverage << std::endl;
+  std::for_each(chromosomesScoreIndex.begin(), chromosomesScoreIndex.end(), [](const std::pair<precision, int> score){
+    std::cout << "Score: "<< score.first << " Key: " << score.second << std::endl;
+  }); */
   //auto end = std::chrono::system_clock::now();
-  //std::cout << "Evaluate time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  //std::cout << "Evaluate sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
 }
 
@@ -220,7 +218,7 @@ void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
  */
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
-                                        const double evaluationsAverage) const{
+                                        const double evaluationsAverage) const {
   /*
   //! print chromosome index with fitness value for test purpose
   std::for_each(chromosomesScoreIndex.begin(),
@@ -232,7 +230,7 @@ void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &
   //! for each chromosome compute and store probability of survive
   std::for_each(chromosomesScoreIndex.begin(),
                 chromosomesScoreIndex.end(),
-                [&](std::pair<double, int> &chromosome) {
+                [&evaluationsAverage](std::pair<double, int> &chromosome) -> void {
                   //! formula adapted from "A genetic algorithm tutorial" Darrel Whitley
                   chromosome.first = evaluationsAverage / chromosome.first;
                 });
@@ -240,7 +238,7 @@ void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &
   //! sort obtained probability in increasing order (ordine crescente)
   std::sort(chromosomesScoreIndex.begin(),
             chromosomesScoreIndex.end(),
-            [&](const std::pair<precision, int> &a, const std::pair<precision, int> &b) {
+            [](const std::pair<precision, int> &a, const std::pair<precision, int> &b) -> bool {
               return a.first < b.first;
             });
 
@@ -271,7 +269,7 @@ void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>>
   //! divide the probability space between the chromosome over their reproduction factor
   std::for_each(chromosomesProbabilityIndex.begin(),
                 chromosomesProbabilityIndex.end(),
-                [&](std::pair<precision, int> &chromosome) {
+                [&probabilitiesSum](std::pair<precision, int> &chromosome) -> void {
                   probabilitiesSum += chromosome.first;
                   chromosome.first = probabilitiesSum;
                 });
@@ -286,7 +284,7 @@ void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>>
   std::uniform_real_distribution<double> probabilitySpaceInterval(0, probabilitiesSum);
   std::generate(randomProbabilities.begin(),
                 randomProbabilities.end(),
-                [&]() { return probabilitySpaceInterval(gen); });
+                [&]() -> double { return probabilitySpaceInterval(gen); });
   std::sort(randomProbabilities.begin(), randomProbabilities.end());
 
   //! fill the vector of new population indexes
@@ -311,7 +309,7 @@ void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>>
   //! create intermediate population
   auto intermediatePopulationIt = intermediatePopulation.begin();
   std::for_each(indexNewPopulation.begin(),
-                indexNewPopulation.end(), [&](int &index) {
+                indexNewPopulation.end(), [&](int &index) -> void {
         *intermediatePopulationIt = population.at(index);
         intermediatePopulationIt++;
       });
@@ -378,8 +376,8 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
     std::copy_if(intermediatePopulationIt->begin(),
                  intermediatePopulationIt->end(),
                  std::back_inserter(*crossoverPopulationIt),
-                 [&](Key &currentKey) {
-                   //! discard key if already present (iterator went through all crossoverPopulation array)
+                 [&](Key &currentKey) -> bool {
+                   //! discard key if already present
                    return
                        std::find(crossoverPopulationIt->begin(), crossoverPopulationIt->end(), currentKey)
                            == crossoverPopulationIt->end();
@@ -391,7 +389,7 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
   }
   crossoverPopulationIt++;
 
-  //! Apply crossover to all the chromosomes (except last and first, already done)
+  //! Apply crossover between current chromosome (intermediatePopulationIt) and next one (intermediatePopulationNextIt)
   for (; intermediatePopulationNextIt != intermediatePopulation.end(); intermediatePopulationNextIt++) {
     if (unif(gen) <= crossoverRate) {
       std::copy(intermediatePopulationIt->begin() + swappingIndexes.first,
@@ -400,8 +398,8 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
       std::copy_if(intermediatePopulationNextIt->begin(),
                    intermediatePopulationNextIt->end(),
                    std::back_inserter(*crossoverPopulationIt),
-                   [&](Key &currentKey) {
-                     //! discard key if already present (iterator went through all crossoverPopulation array)
+                   [&](Key &currentKey) -> bool {
+                     //! discard key if already present
                      return
                          std::find(crossoverPopulationIt->begin(), crossoverPopulationIt->end(), currentKey)
                              == crossoverPopulationIt->end();
@@ -415,7 +413,7 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
     crossoverPopulationIt++;
   }
   crossoverPopulation.swap(intermediatePopulation);
-  //auto end = std::chrono::system_clock::now();
+//  auto end = std::chrono::system_clock::now();
   //std::cout << "Crossover time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
   /*
@@ -450,7 +448,7 @@ void TSPSequential<Key, Value>::mutation(std::vector<std::vector<Key>> &intermed
 
   std::for_each(intermediatePopulation.begin(),
                 intermediatePopulation.end(),
-                [&](std::vector<Key> &chromosome) {
+                [&](std::vector<Key> &chromosome) -> void {
                   /*
                   //! print before mutation for test purpose
                   std::for_each(chromosome.begin(),
@@ -488,7 +486,8 @@ void TSPSequential<Key, Value>::printBestSolution(Graph<Key, Value> &graph,
   for (int i = 0; i < currentBestSolution.size() - 1; i++) {
     chromosomeScore += graph.GetEdgeValue(currentBestSolution.at(i), currentBestSolution.at(i + 1));
   }
-  chromosomeScore += graph.GetEdgeValue(currentBestSolution.at(0), currentBestSolution.at(currentBestSolution.size() - 1));
+  chromosomeScore +=
+      graph.GetEdgeValue(currentBestSolution.at(0), currentBestSolution.at(currentBestSolution.size() - 1));
   std::cout << chromosomeScore << std::endl;
 }
 
@@ -496,15 +495,15 @@ void TSPSequential<Key, Value>::printBestSolution(Graph<Key, Value> &graph,
  *
  */
 template<typename Key, typename Value>
-void TSPSequential<Key, Value>::printPopulation() const{
+void TSPSequential<Key, Value>::printPopulation() const {
   //! print current population
-  std::cout << "Current population " << std::endl;
+  std::cout << "Current sequential population " << std::endl;
   std::for_each(population.begin(),
                 population.end(),
-                [&](std::vector<Key> &chromosome) {
+                [](const std::vector<Key> &chromosome) -> void {
                   std::for_each(chromosome.begin(),
                                 chromosome.end(),
-                                [&](Key &cell) {
+                                [&](const Key &cell) {
                                   std::cout << cell << std::endl;
                                 });
                   std::cout << std::endl;

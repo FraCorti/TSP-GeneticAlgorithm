@@ -22,9 +22,9 @@ add_library(GeneticAlgorithms
         STATIC
         src/graph/graph.h
         src/tsp/sequentialTSP.h
-        src/tsp/parallelTSP.h
         src/tsp/fastflowTSP.h
-        src/tsp/geneticAlgorithm.h)
+        src/tsp/geneticAlgorithm.h
+        src/tsp/parallelTSP.h)
 
 # set compiler
 set_property(TARGET GeneticTSP PROPERTY CXX_STANDARD 17)
