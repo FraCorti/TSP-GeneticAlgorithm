@@ -9,287 +9,288 @@
 #include <ff/pipeline.hpp>
 #include <ff/farm.hpp>
 #include <ff/pipeline.hpp>
-
-//! emitter node for evaluate stage
-struct ChunksEmitter : ff::ff_monode_t<int, std::pair<int, int>> {
- private:
-  std::vector<std::pair<int, int>> &chunks;
-  int generationsNumber;
- public:
-  ChunksEmitter(std::vector<std::pair<int, int>> *chunks, int generationsNumber_)
-      : chunks(*chunks), generationsNumber(generationsNumber_) {}
-
-  //TODO: understand if feedback loop notify inside svc method
-  std::pair<int, int> *svc(int *currentGeneration) override {
-    if (generationsNumber <= 0) {
-      return this->EOS;
-    }
-    generationsNumber--;
-    std::for_each(chunks.begin(), chunks.end(), [&](std::pair<int, int> &chunk) {
-      this->ff_send_out(&chunk);
-    });
-    return this->GO_ON;
-  }
-};
-
-//! worker node for Evaluate stage
-template<typename Key, typename Value>
-struct EvaluateWorker : ff::ff_node_t<std::pair<int, int>, std::pair<int, int>> {
- private:
-  std::vector<std::vector<Key>> &population;
-  std::vector<std::pair<precision, int>> &chromosomesScoreIndex;
-  Graph<Key, Value> &graph;
-  const int chromosomeSize;
- public:
-  EvaluateWorker(std::vector<std::vector<Key>> *population,
-                 std::vector<std::pair<precision, int>> &chromosomes_score_index,
-                 Graph<Key, Value> *graph)
-      : population(*population),
-        chromosomesScoreIndex(chromosomes_score_index),
-        graph(*graph),
-        chromosomeSize(population->begin()->size()) {
-  }
-
-  std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
-    int start = chunk->first;
-    int end = chunk->second;
-    for (int chromosomeIndex = start; chromosomeIndex <= end; chromosomeIndex++) {
-      double chromosomeScore = 0;
-      std::vector<Key> &chromosome = population.at(chromosomeIndex);
-      for (int i = 0; i < chromosomeSize - 1; i++) {
-        chromosomeScore += graph.GetEdgeValue(chromosome.at(i), chromosome.at(i + 1));
-      }
-      chromosomesScoreIndex.at(chromosomeIndex).first = chromosomeScore
-          + graph.GetEdgeValue(chromosome.at(0), chromosome.at(chromosomeSize - 1));
-      chromosomesScoreIndex.at(chromosomeIndex).second = chromosomeIndex;
-    }
-    this->ff_send_out(chunk);
-    return this->GO_ON;
-  }
-};
-
-template<typename Key, typename Value>
-struct ChunksCollector : ff::ff_minode_t<std::pair<int, int>> {
- private:
-  const int chunksNumber;
-  int currentChunksNumber;
- public:
-  explicit ChunksCollector(int chunks_number) : chunksNumber(chunks_number), currentChunksNumber(chunks_number) {}
-  std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
-    currentChunksNumber--;
-
-    //! if all the chunks have been computed then proceed to the next stage
-    if (currentChunksNumber == 0) {
-      currentChunksNumber = chunksNumber;
-      this->ff_send_out(chunk);
-    }
-    return this->GO_ON;
-  }
-};
-
-/**  PRE: chromosomesScoreIndex has been filled with pairs of <fitnessScore, chromosomeIndex>
- * */
-template<typename Key, typename Value>
-struct FitnessSelection : ff::ff_node {
- private:
-  std::random_device rd;
-  std::mt19937 gen{rd()};
-  std::uniform_real_distribution<double> unif{0, 1};
-
-  const int chunksNumber;
-  int currentChunksNumber;
-  std::vector<std::vector<Key>> *population;
-  std::vector<std::pair<precision, int>> *chromosomesScoreIndex;
-  std::vector<std::vector<Key>> intermediatePopulation;
- public:
-  FitnessSelection(std::vector<std::vector<Key>> *population_,
-                   const int chunks_number,
-                   int seed = 0) : population(population_),
-                                   chunksNumber(chunks_number),
-                                   currentChunksNumber(chunks_number) {
-    intermediatePopulation.resize(population->size());
-    if (seed) {
-      gen.seed(seed);
-    }
-  }
-  void *svc(void *task) override {
-    double totalScore = 0;
-    std::for_each(chromosomesScoreIndex->begin(),
-                  chromosomesScoreIndex->end(),
-                  [&totalScore](const std::pair<precision, int> scoreIndex) {
-                    totalScore += scoreIndex.first;
-                  });
-    double evaluationsAverage = totalScore / chromosomesScoreIndex->size();
-
-    std::for_each(chromosomesScoreIndex->begin(),
-                  chromosomesScoreIndex->end(),
-                  [&evaluationsAverage](std::pair<double, int> &chromosome) -> void {
-                    //! formula adapted from "A genetic algorithm tutorial" Darrel Whitley
-                    chromosome.first = evaluationsAverage / chromosome.first;
-                  });
-
-    //! sort obtained probability in increasing order (ordine crescente)
-    std::sort(chromosomesScoreIndex->begin(),
-              chromosomesScoreIndex->end(),
-              [](const std::pair<precision, int> &a, const std::pair<precision, int> &b) -> bool {
-                return a.first < b.first;
-              });
-
-    double probabilitiesSum = 0;
-    std::vector<precision> randomProbabilities(chromosomesScoreIndex->size());
-    std::vector<int> indexNewPopulation(chromosomesScoreIndex->size());
-
-    //! divide the probability space between the chromosome over their reproduction factor
-    std::for_each(chromosomesScoreIndex->begin(),
-                  chromosomesScoreIndex->end(),
-                  [&probabilitiesSum](std::pair<precision, int> &chromosome) -> void {
-                    probabilitiesSum += chromosome.first;
-                    chromosome.first = probabilitiesSum;
-                  });
-
-    //! generate random numbers inside probability space and sort them
-    std::uniform_real_distribution<double> probabilitySpaceInterval(0, probabilitiesSum);
-    std::generate(randomProbabilities.begin(),
-                  randomProbabilities.end(),
-                  [&]() -> double { return probabilitySpaceInterval(gen); });
-    std::sort(randomProbabilities.begin(), randomProbabilities.end());
-
-    //! fill the vector of new population indexes
-    auto randomProbabilitiesIt = randomProbabilities.begin();
-    auto indexNewPopulationIt = indexNewPopulation.begin();
-    std::vector<std::pair<precision, int>>& chromosomesScoreIndexRef = *chromosomesScoreIndex;
-    for (std::pair<double, int> & chromosome: chromosomesScoreIndexRef) {
-      for (; randomProbabilitiesIt != randomProbabilities.end() && *randomProbabilitiesIt <= chromosome.first;
-             randomProbabilitiesIt++, indexNewPopulationIt++) {
-        *indexNewPopulationIt = chromosome.second;
-      }
-    }
-
-    //! create intermediate population
-    auto intermediatePopulationIt = intermediatePopulation.begin();
-    std::for_each(indexNewPopulation.begin(),
-                  indexNewPopulation.end(), [&](int &index) -> void {
-          *intermediatePopulationIt = population->at(index);
-          intermediatePopulationIt++;
-        });
-    population->swap(intermediatePopulation);
-
-    //! proceed to next stage
-    return this->GO_ON;
-  }
-};
-
-template<typename Key, typename Value>
-struct CrossoverMutationWorker : ff::ff_node_t<std::pair<int, int>, std::pair<int, int>> {
- private:
-  const double crossoverRate;
-  const double mutationRate;
-  std::vector<std::vector<Key>> &population;
-  std::vector<std::vector<Key>> &crossoverPopulation;
-  std::random_device rd;
-  std::mt19937 gen{rd()};
-  std::uniform_real_distribution<double> unif{0, 1};
-  std::uniform_int_distribution<int> indexSpaceInterval;
- public:
-  CrossoverMutationWorker(const double crossover_rate,
-                          const double mutation_rate,
-                          std::vector<std::vector<Key>> *population,
-                          std::vector<std::vector<Key>> *crossover_population,
-                          const int graphNode)
-      : crossoverRate(crossover_rate),
-        mutationRate(mutation_rate),
-        population(*population),
-        crossoverPopulation(*crossover_population), indexSpaceInterval(0, graphNode){
-  }
-  std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
-    int startIndex = chunk->first;
-    int endIndex = chunk->second;
-
-    //! temporary data structure to store crossover results
-    // std::vector<std::vector<Key>> &crossoverPopulation(endIndex - startIndex); //TODO: test if this works
-
-    //! generate swapping indexes
-    int crossoverStart = indexSpaceInterval(gen);
-    int crossoverEnd = indexSpaceInterval(gen);
-    if (crossoverStart > crossoverEnd) {
-      std::swap(crossoverStart, crossoverEnd);
-    }
-
-    //! Apply Crossover between first and last element
-    if (unif(gen) <= crossoverRate) {
-      std::vector<Key> &firstChromosome = population.at(startIndex);
-      std::vector<Key> &lastChromosome = population.at(endIndex);
-      std::copy(lastChromosome.begin() + crossoverStart,
-                lastChromosome.begin() + crossoverEnd + 1,
-                std::back_inserter(crossoverPopulation.at(endIndex)));
-      std::copy_if(firstChromosome.begin(),
-                   firstChromosome.end(),
-                   std::back_inserter(crossoverPopulation.at(endIndex)),
-                   [&](Key &currentKey) -> bool {
-                     //! discard key if already present
-                     return
-                         std::find(crossoverPopulation.at(endIndex).begin(),
-                                   crossoverPopulation.at(endIndex).end(),
-                                   currentKey)
-                             == crossoverPopulation.at(endIndex).end();
-                   });
-    } else {
-      std::copy(population.rbegin()->begin(),
-                population.rbegin()->end(),
-                std::back_inserter(crossoverPopulation.at(endIndex)));
-    }
-
-    //! Apply Mutation to the last chromosome of the chunk
-    if (unif(gen) <= mutationRate) {
-      std::swap(crossoverPopulation.at(endIndex).at(indexSpaceInterval(gen)),
-                crossoverPopulation.at(endIndex).at(indexSpaceInterval(gen)));
-    }
-
-    //! Apply Crossover and Mutation to the chromosomes of the chunk (except last one)
-    for (int chromosomeIndex = startIndex; chromosomeIndex <= endIndex - 1; chromosomeIndex++) {
-      std::vector<Key> &chromosome = population.at(chromosomeIndex);
-      std::vector<Key> &nextChromosome = population.at(chromosomeIndex + 1);
-      if (unif(gen) <= crossoverRate) {
-        std::copy(chromosome.begin() + crossoverStart,
-                  chromosome.begin() + crossoverEnd + 1,
-                  std::back_inserter(crossoverPopulation.at(chromosomeIndex)));
-        std::copy_if(nextChromosome.begin(),
-                     nextChromosome.end(),
-                     std::back_inserter(crossoverPopulation.at(chromosomeIndex)),
-                     [&](Key &currentKey) -> bool {
-                       //! discard key if already present
-                       return
-                           std::find(crossoverPopulation.at(chromosomeIndex).begin(),
-                                     crossoverPopulation.at(chromosomeIndex).end(),
-                                     currentKey)
-                               == crossoverPopulation.at(chromosomeIndex).end();
-                     });
-      } else {
-        std::copy(chromosome.begin(),
-                  chromosome.end(),
-                  std::back_inserter(crossoverPopulation.at(chromosomeIndex)));
-      }
-
-      //! apply mutation to all the chromosomes of the chunk
-      if (unif(gen) <= mutationRate) {
-        std::swap(crossoverPopulation.at(chromosomeIndex).at(indexSpaceInterval(gen)),
-                  crossoverPopulation.at(chromosomeIndex).at(indexSpaceInterval(gen)));
-      }
-    }
-
-    //! store the results in population data structure (try std::transform?)
-    for (int chromosomeIndex = startIndex; chromosomeIndex <= endIndex; chromosomeIndex++) {
-      population.at(chromosomeIndex) = crossoverPopulation.at(chromosomeIndex);
-    }
-
-    this->ff_send_out(chunk);
-    return this->GO_ON;
-  }
-};
+#include <memory>
 
 template<typename Key = int, typename Value = double>
 class TSPFastflow : public GeneticAlgorithm {
  private:
+
+  struct CrossoverMutationWorker : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    const double crossoverRate;
+    const double mutationRate;
+    std::vector<std::vector<Key>> &population;
+    std::vector<std::vector<Key>> &crossoverPopulation;
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+    std::uniform_real_distribution<double> unif{0, 1};
+    std::uniform_int_distribution<int> indexSpaceInterval;
+   public:
+    CrossoverMutationWorker(const double crossover_rate,
+                            const double mutation_rate,
+                            std::vector<std::vector<Key>> *population,
+                            std::vector<std::vector<Key>> &crossover_population,
+                            const int graphNode)
+        : crossoverRate(crossover_rate),
+          mutationRate(mutation_rate),
+          population(*population),
+          crossoverPopulation(crossover_population), indexSpaceInterval(0, graphNode) {
+    }
+    std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
+      int startIndex = chunk->first;
+      int endIndex = chunk->second;
+
+      //! temporary data structure to store crossover results
+      // std::vector<std::vector<Key>> &crossoverPopulation(endIndex - startIndex); //TODO: test if this works
+
+      //! generate swapping indexes
+      int crossoverStart = indexSpaceInterval(gen);
+      int crossoverEnd = indexSpaceInterval(gen);
+      if (crossoverStart > crossoverEnd) {
+        std::swap(crossoverStart, crossoverEnd);
+      }
+
+      //! Apply Crossover between first and last element
+      if (unif(gen) <= crossoverRate) {
+        std::vector<Key> &firstChromosome = population.at(startIndex);
+        std::vector<Key> &lastChromosome = population.at(endIndex);
+        std::copy(lastChromosome.begin() + crossoverStart,
+                  lastChromosome.begin() + crossoverEnd + 1,
+                  std::back_inserter(crossoverPopulation.at(endIndex)));
+        std::copy_if(firstChromosome.begin(),
+                     firstChromosome.end(),
+                     std::back_inserter(crossoverPopulation.at(endIndex)),
+                     [&](Key &currentKey) -> bool {
+                       //! discard key if already present
+                       return
+                           std::find(crossoverPopulation.at(endIndex).begin(),
+                                     crossoverPopulation.at(endIndex).end(),
+                                     currentKey)
+                               == crossoverPopulation.at(endIndex).end();
+                     });
+      } else {
+        std::copy(population.rbegin()->begin(),
+                  population.rbegin()->end(),
+                  std::back_inserter(crossoverPopulation.at(endIndex)));
+      }
+
+      //! Apply Mutation to the last chromosome of the chunk
+      if (unif(gen) <= mutationRate) {
+        std::swap(crossoverPopulation.at(endIndex).at(indexSpaceInterval(gen)),
+                  crossoverPopulation.at(endIndex).at(indexSpaceInterval(gen)));
+      }
+
+      //! Apply Crossover and Mutation to the chromosomes of the chunk (except last one)
+      for (int chromosomeIndex = startIndex; chromosomeIndex <= endIndex - 1; chromosomeIndex++) {
+        std::vector<Key> &chromosome = population.at(chromosomeIndex);
+        std::vector<Key> &nextChromosome = population.at(chromosomeIndex + 1);
+        if (unif(gen) <= crossoverRate) {
+          std::copy(chromosome.begin() + crossoverStart,
+                    chromosome.begin() + crossoverEnd + 1,
+                    std::back_inserter(crossoverPopulation.at(chromosomeIndex)));
+          std::copy_if(nextChromosome.begin(),
+                       nextChromosome.end(),
+                       std::back_inserter(crossoverPopulation.at(chromosomeIndex)),
+                       [&](Key &currentKey) -> bool {
+                         //! discard key if already present
+                         return
+                             std::find(crossoverPopulation.at(chromosomeIndex).begin(),
+                                       crossoverPopulation.at(chromosomeIndex).end(),
+                                       currentKey)
+                                 == crossoverPopulation.at(chromosomeIndex).end();
+                       });
+        } else {
+          std::copy(chromosome.begin(),
+                    chromosome.end(),
+                    std::back_inserter(crossoverPopulation.at(chromosomeIndex)));
+        }
+
+        //! apply mutation to all the chromosomes of the chunk
+        if (unif(gen) <= mutationRate) {
+          std::swap(crossoverPopulation.at(chromosomeIndex).at(indexSpaceInterval(gen)),
+                    crossoverPopulation.at(chromosomeIndex).at(indexSpaceInterval(gen)));
+        }
+      }
+
+      //! store the results in population data structure (try std::transform?)
+      for (int chromosomeIndex = startIndex; chromosomeIndex <= endIndex; chromosomeIndex++) {
+        population.at(chromosomeIndex) = crossoverPopulation.at(chromosomeIndex);
+      }
+
+      this->ff_send_out(chunk);
+      return this->GO_ON;
+    }
+  };
+
+  //! emitter node for evaluate stage
+  struct ChunksEmitter : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    std::vector<std::pair<int, int>> &chunks;
+    int generationsNumber;
+   public:
+    ChunksEmitter(std::vector<std::pair<int, int>> *chunks, int generationsNumber_)
+        : chunks(*chunks), generationsNumber(generationsNumber_) {}
+
+    //TODO: understand if feedback loop notify inside svc method
+    std::pair<int, int> *svc(std::pair<int, int> *currentGeneration) override {
+      if (generationsNumber <= 0) {
+        return this->EOS;
+      }
+      generationsNumber--;
+      std::for_each(chunks.begin(), chunks.end(), [&](std::pair<int, int> &chunk) {
+        this->ff_send_out(new std::pair<int,int>(chunk.first, chunk.second));
+      });
+      return this->GO_ON;
+    }
+  };
+
+//! worker node for Evaluate stage
+  struct EvaluateWorker : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    std::vector<std::vector<Key>> &population;
+    std::vector<std::pair<precision, int>> &chromosomesScoreIndex;
+    Graph<Key, Value> &graph;
+    const int chromosomeSize;
+   public:
+    EvaluateWorker(std::vector<std::vector<Key>> *population,
+                   std::vector<std::pair<precision, int>> &chromosomes_score_index,
+                   Graph<Key, Value> *graph)
+        : population(*population),
+          chromosomesScoreIndex(chromosomes_score_index),
+          graph(*graph),
+          chromosomeSize(population->begin()->size()) {
+    }
+
+    std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
+      int start = chunk->first;
+      int end = chunk->second;
+      delete chunk;
+      for (int chromosomeIndex = start; chromosomeIndex <= end; chromosomeIndex++) {
+        double chromosomeScore = 0;
+        std::vector<Key> &chromosome = population.at(chromosomeIndex);
+        for (int i = 0; i < chromosomeSize - 1; i++) {
+          chromosomeScore += graph.GetEdgeValue(chromosome.at(i), chromosome.at(i + 1));
+        }
+        chromosomesScoreIndex.at(chromosomeIndex).first = chromosomeScore
+            + graph.GetEdgeValue(chromosome.at(0), chromosome.at(chromosomeSize - 1));
+        chromosomesScoreIndex.at(chromosomeIndex).second = chromosomeIndex;
+      }
+      this->ff_send_out(new std::pair<int,int>(start, end));
+      return this->GO_ON;
+    }
+  };
+
+  struct ChunksCollector : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    const int chunksNumber;
+    int currentChunksNumber;
+   public:
+    explicit ChunksCollector(int chunks_number) : chunksNumber(chunks_number), currentChunksNumber(chunks_number) {}
+    std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
+      currentChunksNumber--;
+
+      //! if all the chunks have been computed then proceed to the next stage
+      if (currentChunksNumber == 0) {
+        currentChunksNumber = chunksNumber;
+        //return this->EOS;
+        this->ff_send_out(chunk);
+      }
+      return this->GO_ON;
+    }
+  };
+
+/**  PRE: chromosomesScoreIndex has been filled with pairs of <fitnessScore, chromosomeIndex>
+ * */
+  struct FitnessSelection : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+    std::uniform_real_distribution<double> unif{0, 1};
+   public:
+    const int chunksNumber;
+    int currentChunksNumber; // TODO: understand if remove collector
+    std::vector<std::vector<Key>> &population;
+    std::vector<std::pair<precision, int>> &chromosomesScoreIndex;
+    std::vector<std::vector<Key>> intermediatePopulation;
+
+    FitnessSelection(std::vector<std::vector<Key>> *population_,
+                     std::vector<std::pair<precision, int>> &chromosomes_score_index,
+                     const int chunks_number = 0,
+                     int seed = 0) : population(*population_),
+                                     chromosomesScoreIndex(chromosomes_score_index),
+                                     chunksNumber(chunks_number),
+                                     currentChunksNumber(chunks_number) {
+      intermediatePopulation.resize(population_->size());
+      if (seed) {
+        gen.seed(seed);
+      }
+    }
+    std::pair<int, int> *svc(std::pair<int, int> *task) override {
+      delete task;
+      double totalScore = 0;
+      std::for_each(chromosomesScoreIndex.begin(),
+                    chromosomesScoreIndex.end(),
+                    [&totalScore](const std::pair<precision, int> scoreIndex) {
+                      totalScore += scoreIndex.first;
+                    });
+      double evaluationsAverage = totalScore / chromosomesScoreIndex.size();
+
+      std::for_each(chromosomesScoreIndex.begin(),
+                    chromosomesScoreIndex.end(),
+                    [&evaluationsAverage](std::pair<double, int> &chromosome) -> void {
+                      //! formula adapted from "A genetic algorithm tutorial" Darrel Whitley
+                      chromosome.first = evaluationsAverage / chromosome.first;
+                    });
+
+      //! sort obtained probability in increasing order (ordine crescente)
+      std::sort(chromosomesScoreIndex.begin(),
+                chromosomesScoreIndex.end(),
+                [](const std::pair<precision, int> &a, const std::pair<precision, int> &b) -> bool {
+                  return a.first < b.first;
+                });
+
+      double probabilitiesSum = 0;
+      std::vector<precision> randomProbabilities(chromosomesScoreIndex.size());
+      std::vector<int> indexNewPopulation(chromosomesScoreIndex.size());
+
+      //! divide the probability space between the chromosome over their reproduction factor
+      std::for_each(chromosomesScoreIndex.begin(),
+                    chromosomesScoreIndex.end(),
+                    [&probabilitiesSum](std::pair<precision, int> &chromosome) -> void {
+                      probabilitiesSum += chromosome.first;
+                      chromosome.first = probabilitiesSum;
+                    });
+
+      //! generate random numbers inside probability space and sort them
+      std::uniform_real_distribution<double> probabilitySpaceInterval(0, probabilitiesSum);
+      std::generate(randomProbabilities.begin(),
+                    randomProbabilities.end(),
+                    [&]() -> double { return probabilitySpaceInterval(gen); });
+      std::sort(randomProbabilities.begin(), randomProbabilities.end());
+
+      //! fill the vector of new population indexes
+      auto randomProbabilitiesIt = randomProbabilities.begin();
+      auto indexNewPopulationIt = indexNewPopulation.begin();
+      for (std::pair<double, int> &chromosome: chromosomesScoreIndex) {
+        for (; randomProbabilitiesIt != randomProbabilities.end() && *randomProbabilitiesIt <= chromosome.first;
+               randomProbabilitiesIt++, indexNewPopulationIt++) {
+          *indexNewPopulationIt = chromosome.second;
+        }
+      }
+
+      //! create intermediate population
+      auto intermediatePopulationIt = intermediatePopulation.begin();
+      std::for_each(indexNewPopulation.begin(),
+                    indexNewPopulation.end(), [&](int &index) -> void {
+            *intermediatePopulationIt = population.at(index);
+            intermediatePopulationIt++;
+          });
+      population.swap(intermediatePopulation);
+      this->ff_send_out(new std::pair<int,int>(1, 1));
+      //! proceed to next stage
+      return this->GO_ON;
+    }
+  };
 
   //! vector of chromosomes
   std::vector<std::vector<Key>> population;
@@ -331,56 +332,50 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   }
   population.clear();
   population.resize(chromosomeNumber);
-
-  setupComputation(workers, chromosomeNumber);
+  int currentWorkers = workers - 2;
+  setupComputation(currentWorkers, chromosomeNumber);
   generatePopulation(graph, chromosomeNumber);
 
   //! pairs of <fitness score, chromosomeIndex>
   std::vector<std::pair<precision, int>> chromosomesScoreIndex(chromosomeNumber);
   std::vector<std::vector<Key>> crossoverPopulation(chromosomeNumber);
 
-  int crossoverThreads = std::ceil(std::ceil(workers / 2) * crossoverRate);
-  int evaluateThreads = workers - crossoverThreads;
+  int crossoverThreads = 1; //std::ceil(std::ceil(workers / 2) * crossoverRate);
+  int evaluateThreads = workers - 2;  // tolgo i collector - crossoverThreads;
 
   //! farm for evaluate stage
   ChunksEmitter evaluateEmitter(&chunks, generationNumber);
-  ChunksCollector<Key, Value> evaluateCollector(chunks.size());
-  ff::ff_farm evaluateFarm;
-  std::vector<ff::ff_node *> evaluateWorkers;
-  for (int i = 0; i < evaluateThreads; ++i) {
-    evaluateWorkers.push_back(new EvaluateWorker<Key, Value>(&population, chromosomesScoreIndex, &graph));
-  }
-  evaluateFarm.add_emitter(evaluateEmitter);
-  evaluateFarm.add_workers(evaluateWorkers);
-  evaluateFarm.add_collector(&evaluateCollector);
+  ChunksCollector evaluateCollector(chunks.size());
 
-  //! create middle stage
-  FitnessSelection<Key, Value> fitnessSelection(&population, chunks.size());
+  std::vector<std::unique_ptr<ff::ff_node>> evaluateWorkers;
+  for (int i = 0; i < evaluateThreads; ++i) {
+    evaluateWorkers.push_back(std::make_unique<EvaluateWorker>(&population, chromosomesScoreIndex, &graph));
+  }
+  ff::ff_Farm<std::pair<int,int>> evaluateFarm(std::move(evaluateWorkers), evaluateEmitter, evaluateCollector);
+
+  //! create intermediate stage
+  FitnessSelection fitnessSelectionStage(&population, chromosomesScoreIndex);
 
   //! farm for crossover and mutation stage
   ChunksEmitter crossoverMutationEmitter(&chunks, generationNumber);
-  ChunksCollector<Key, Value> crossoverMutationCollector(chunks.size());
-  ff::ff_farm crossoverMutationFarm;
-  std::vector<ff::ff_node *> crossoverMutationWorkers;
+  ChunksCollector crossoverMutationCollector(chunks.size());
+  std::vector<std::unique_ptr<ff::ff_node>> crossoverMutationWorkers;
   for (int i = 0; i < crossoverThreads; ++i) {
-    crossoverMutationWorkers.push_back(new CrossoverMutationWorker<Key, Value>(crossoverRate,
-                                                                               mutationRate,
-                                                                               &population,
-                                                                               &crossoverPopulation,
-                                                                               graph.GetNodesNumber()));
+    crossoverMutationWorkers.push_back(std::make_unique<CrossoverMutationWorker>(crossoverRate,
+                                                                                 mutationRate,
+                                                                                 &population,
+                                                                                 crossoverPopulation,
+                                                                                 graph.GetNodesNumber()));
   }
-  crossoverMutationFarm.add_emitter(crossoverMutationEmitter);
-  crossoverMutationFarm.add_workers(crossoverMutationWorkers);
-  crossoverMutationFarm.add_collector(&crossoverMutationCollector);
-
-  ff::ff_Pipe<> geneticAlgorithm(evaluateFarm, fitnessSelection, crossoverMutationFarm);
-  geneticAlgorithm.wrap_around();
-
+  ff::ff_Farm<std::pair<int,int>>
+      crossoverMutationFarm(std::move(crossoverMutationWorkers), crossoverMutationEmitter, crossoverMutationCollector);
   auto start = std::chrono::system_clock::now();
 
-  //! start Fastflow genetic algorithm
-  if (geneticAlgorithm.run_and_wait_end() < 0) {
-    ff::error("running farm");
+  ff::ff_Pipe<std::pair<int,int>> pipe(evaluateFarm, fitnessSelectionStage, crossoverMutationFarm);
+  pipe.wrap_around();
+
+  if (pipe.run_and_wait_end() < 0) {
+    ff::error("running pipe");
     return;
   }
 
