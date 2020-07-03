@@ -3,7 +3,7 @@ project(GeneticTSP VERSION 1.0
         DESCRIPTION "TSP Genetic Algorithm"
         LANGUAGES CXX)
 
-# find package needed by the project
+# find packages
 find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 
@@ -26,7 +26,6 @@ add_library(GeneticAlgorithms
         src/tsp/geneticAlgorithm.h
         src/tsp/parallelTSP.h)
 
-# set compiler
 set_property(TARGET GeneticTSP PROPERTY CXX_STANDARD 17)
 set_target_properties(GeneticAlgorithms PROPERTIES
         CXX_STANDARD 17

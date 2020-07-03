@@ -23,20 +23,20 @@ class TSPParallel : public GeneticAlgorithm {
   std::uniform_real_distribution<double> unif{0, 1};
   Graph<Key, Value> &graph;
 
-  void evaluate(Graph<Key, Value> &graph,
-                std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
-                double &evaluationsAverage);
+  void parallelEvaluate(Graph<Key, Value> &graph,
+                        std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
+                        double &evaluationsAverage);
   void mutation(std::vector<std::vector<Key>> &intermediatePopulation, double mutationRate);
-  void crossover(std::vector<std::vector<Key>> &intermediatePopulation, double crossoverRate);
+  void parallelCrossover(std::vector<std::vector<Key>> &intermediatePopulation, double crossoverRate);
   void fitness(std::vector<std::pair<precision, int>> &chromosomesScoreIndex, double evaluationsAverage) const;
   void selection(std::vector<std::pair<precision, int>> &chromosomesProbabilityIndex,
                  std::vector<std::vector<Key>> &intermediatePopulation);
-  void generatePopulation(Graph<Key, Value> &graph,
-                          int chromosomeNumber);
+  void parallelGeneratePopulation(Graph<Key, Value> &graph,
+                                  int chromosomeNumber);
   void printBestSolution(Graph<Key, Value> &graph,
                          std::vector<std::pair<precision, int>> &chromosomesScoreIndex);
   void setupComputation(int workersNumber, int chromosomeNumber);
-  void printPopulation(const std::vector<std::vector<Key>>& population_) const;
+  void printPopulation(const std::vector<std::vector<Key>> &population_) const;
  public:
   explicit TSPParallel(Graph<Key, Value> &graph);
   void Run(
@@ -63,28 +63,28 @@ void TSPParallel<Key, Value>::Run(const int chromosomeNumber,
   population.clear();
   population.resize(chromosomeNumber);
 
-  auto start = std::chrono::system_clock::now();
-
   //! setup parallel computation
   setupComputation(workers_, chromosomeNumber);
 
   //! generate initial population
-  generatePopulation(graph, chromosomeNumber);
+  parallelGeneratePopulation(graph, chromosomeNumber);
 
   //! pairs of <fitness score, chromosomeIndex>
   std::vector<std::pair<precision, int>> chromosomesScoreIndex(chromosomeNumber);
   std::vector<std::vector<Key>> intermediatePopulation(chromosomeNumber);
   double evaluationsAverage = 0;
 
+  auto start = std::chrono::system_clock::now();
+
   //! start genetic algorithm
   for (size_t generation = 1; generation <= generationNumber; generation++) {
-    evaluate(graph, chromosomesScoreIndex, evaluationsAverage);
+    parallelEvaluate(graph, chromosomesScoreIndex, evaluationsAverage);
 
     fitness(chromosomesScoreIndex, evaluationsAverage);
     //printBestSolution(graph, chromosomesScoreIndex);  // plot the convergence
     selection(chromosomesScoreIndex, intermediatePopulation);
 
-    crossover(intermediatePopulation, crossoverRate);
+    parallelCrossover(intermediatePopulation, crossoverRate);
     mutation(intermediatePopulation, mutationRate);
 
     //! setup next generation
@@ -137,7 +137,7 @@ void TSPParallel<Key, Value>::setupComputation(const int workersNumber, const in
  * @param chromosomeNumber
  */
 template<typename Key, typename Value>
-void TSPParallel<Key, Value>::generatePopulation(Graph<Key, Value> &graph, int chromosomeNumber) {
+void TSPParallel<Key, Value>::parallelGeneratePopulation(Graph<Key, Value> &graph, int chromosomeNumber) {
   //auto start = std::chrono::system_clock::now();
 
   std::vector<std::vector<std::pair<Key, Value>>>
@@ -174,7 +174,7 @@ void TSPParallel<Key, Value>::generatePopulation(Graph<Key, Value> &graph, int c
                     return a.second > b.second;
                   });
 
-        //! fill population with new chromosomes
+        //! fill population data structure with new chromosomes obtained after sorting
         std::transform(chromosome.begin(),
                        chromosome.end(),
                        std::back_inserter(population.at(chromosomeIndex)),
@@ -189,7 +189,7 @@ void TSPParallel<Key, Value>::generatePopulation(Graph<Key, Value> &graph, int c
   std::for_each(workers.begin(), workers.end(), [&](std::future<void> &worker) { worker.get(); });
   //auto end = std::chrono::system_clock::now();
   //std::cout << "Generation parallel time: "
-    //        << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  //        << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 }
 
 /***
@@ -199,9 +199,9 @@ void TSPParallel<Key, Value>::generatePopulation(Graph<Key, Value> &graph, int c
  * @param evaluationsAverage
  */
 template<typename Key, typename Value>
-void TSPParallel<Key, Value>::evaluate(Graph<Key, Value> &graph,
-                                       std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
-                                       double &evaluationsAverage) {
+void TSPParallel<Key, Value>::parallelEvaluate(Graph<Key, Value> &graph,
+                                               std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
+                                               double &evaluationsAverage) {
   //auto start = std::chrono::system_clock::now();
   auto chunksIt = chunks.begin();
   int chromosomeSize = population.begin()->size();
@@ -307,8 +307,8 @@ void TSPParallel<Key, Value>::selection(std::vector<std::pair<precision, int>> &
  * @param crossoverRate
  */
 template<typename Key, typename Value>
-void TSPParallel<Key, Value>::crossover(std::vector<std::vector<Key>> &intermediatePopulation, double crossoverRate) {
- // auto start = std::chrono::system_clock::now();
+void TSPParallel<Key, Value>::parallelCrossover(std::vector<std::vector<Key>> &intermediatePopulation, double crossoverRate) {
+  // auto start = std::chrono::system_clock::now();
   std::random_shuffle(intermediatePopulation.begin(), intermediatePopulation.end());
   std::uniform_int_distribution<int> indexSpaceInterval(0, intermediatePopulation.begin()->size() - 1);
   std::vector<std::vector<Key>> crossoverPopulation(intermediatePopulation.size());
@@ -327,8 +327,8 @@ void TSPParallel<Key, Value>::crossover(std::vector<std::vector<Key>> &intermedi
 
                           //! Apply Crossover between first and last element
                           if (unif(gen) <= crossoverRate) {
-                            std::vector<Key>& firstChromosome = intermediatePopulation.at(start);
-                            std::vector<Key>& lastChromosome = intermediatePopulation.at(end);
+                            std::vector<Key> &firstChromosome = intermediatePopulation.at(start);
+                            std::vector<Key> &lastChromosome = intermediatePopulation.at(end);
                             std::copy(lastChromosome.begin() + crossoverStart,
                                       lastChromosome.begin() + crossoverEnd + 1,
                                       std::back_inserter(crossoverPopulation.at(end)));
@@ -344,12 +344,12 @@ void TSPParallel<Key, Value>::crossover(std::vector<std::vector<Key>> &intermedi
                                                    == crossoverPopulation.at(end).end();
                                          });
                           } else {
-                            std::copy(intermediatePopulation.rbegin()->begin(),
-                                      intermediatePopulation.rbegin()->end(),
+                            std::copy(intermediatePopulation.at(end).begin(),
+                                      intermediatePopulation.at(end).end(),
                                       std::back_inserter(crossoverPopulation.at(end)));
                           }
 
-                          //! Apply Crossover to inner chromosomes in the chunk
+                          //! Apply Crossover to inner chromosomes of the chunk
                           for (int chromosomeIndex = start; chromosomeIndex <= end - 1; chromosomeIndex++) {
                             std::vector<Key> &chromosome = intermediatePopulation.at(chromosomeIndex);
                             std::vector<Key> &nextChromosome = intermediatePopulation.at(chromosomeIndex + 1);
@@ -391,14 +391,14 @@ void TSPParallel<Key, Value>::mutation(std::vector<std::vector<Key>> &intermedia
   std::for_each(intermediatePopulation.begin(),
                 intermediatePopulation.end(),
                 [&](std::vector<Key> &chromosome) -> void {
-                  //!  swap two random indexes of the chromosomes
+                  //! swap two random cells
                   if (unif(gen) <= mutationRate) {
                     std::swap(chromosome.at(randomIndexes(gen)), chromosome.at(randomIndexes(gen)));
                   }
                 });
   //auto end = std::chrono::system_clock::now();
   //std::cout << "Mutation parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
-            //<< std::endl;
+  //<< std::endl;
 }
 
 template<typename Key, typename Value>
@@ -415,7 +415,7 @@ void TSPParallel<Key, Value>::printBestSolution(Graph<Key, Value> &graph,
 }
 
 template<typename Key, typename Value>
-void TSPParallel<Key, Value>::printPopulation(const std::vector<std::vector<Key>>& population_) const {
+void TSPParallel<Key, Value>::printPopulation(const std::vector<std::vector<Key>> &population_) const {
 //! print current population
   std::for_each(population_.begin(),
                 population_.end(),

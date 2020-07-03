@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
   //TSPSequential<int, double> tspSequential(graph);
   //tspSequential.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
 
-  //TSPParallel<int, double> tspParallel(graph);
-  //tspParallel.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
+  TSPParallel<int, double> tspParallel(graph);
+  tspParallel.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
 
   TSPFastflow<int, double> tspFastflow(graph);
   tspFastflow.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);

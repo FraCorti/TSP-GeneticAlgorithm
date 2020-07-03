@@ -405,6 +405,8 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   int currentWorkers = workers - 2; //TODO: understand how to assign the threads
   setupComputation(workers, chromosomeNumber); //TODO: granularity of chunks?
 
+  auto start = std::chrono::system_clock::now();
+
   //! generate initial population using Fastflow farm
   generatePopulationFastflow(graph, chromosomeNumber, workers, graph.GetNodesNumber());
 
@@ -417,7 +419,7 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   ChunksCollector evaluateCollector(chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> evaluateWorkers;
   for (int i = 0; i < workers; ++i) {
-    evaluateWorkers.push_back(std::make_unique<EvaluateWorker>(&population, chromosomesScoreIndex, &graph));
+    evaluateWorkers.push_back(std::unique_ptr<EvaluateWorker>(new EvaluateWorker(&population, chromosomesScoreIndex, &graph)));
   }
   ff::ff_Farm<std::pair<int, int>> evaluateFarm(std::move(evaluateWorkers), evaluateEmitter, evaluateCollector);
   //! intermediate stage
@@ -428,15 +430,14 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   CrossoverMutationCollector crossoverMutationCollector(crossoverPopulation, chromosomeNumber, chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> crossoverMutationWorkers;
   for (int i = 0; i < workers; ++i) {
-    crossoverMutationWorkers.push_back(std::make_unique<CrossoverMutationWorker>(crossoverRate,
-                                                                                 mutationRate,
-                                                                                 &population,
-                                                                                 crossoverPopulation,
-                                                                                 graph.GetNodesNumber()));
+    crossoverMutationWorkers.push_back(std::unique_ptr<CrossoverMutationWorker>(new CrossoverMutationWorker(crossoverRate,
+                                                                                                            mutationRate,
+                                                                                                            &population,
+                                                                                                            crossoverPopulation,
+                                                                                                            graph.GetNodesNumber())));;
   }
   ff::ff_Farm<std::pair<int, int>>
       crossoverMutationFarm(std::move(crossoverMutationWorkers), crossoverMutationEmitter, crossoverMutationCollector);
-  auto start = std::chrono::system_clock::now();
 
   ff::ff_Pipe<std::pair<int, int>> pipe(evaluateFarm, fitnessSelectionStage, crossoverMutationFarm);
   pipe.wrap_around();
@@ -444,7 +445,6 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
     ff::error("running pipe");
     return;
   }
-
   auto end = std::chrono::system_clock::now();
   std::cout << "Fastflow time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
             << std::endl;
@@ -495,7 +495,7 @@ void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &grap
                                                          int chromosomeNumber,
                                                          int workers,
                                                          int nodesNumber) {
-  ff::ffTime(ff::START_TIME);
+
 
   std::vector<std::vector<std::pair<Key, Value>>> initialGeneratedPopulation(chromosomeNumber);
   std::for_each(initialGeneratedPopulation.begin(),
@@ -509,9 +509,9 @@ void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &grap
   ChunksCollector generateChromosomesCollector(chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> generationWorkers;
   for (int i = 0; i < workers; i++) {
-    generationWorkers.push_back(std::make_unique<ChromosomeGenerationWorker>(&population,
-                                                                             &graph,
-                                                                             &initialGeneratedPopulation));
+    generationWorkers.push_back(std::unique_ptr<ChromosomeGenerationWorker>(new ChromosomeGenerationWorker(&population,
+                                                                                                           &graph,
+                                                                                                           &initialGeneratedPopulation)));
   }
   ff::ff_Farm<std::pair<int, int>>
       creationFarm(std::move(generationWorkers), generateChromosomesEmitter, generateChromosomesCollector);
@@ -519,8 +519,7 @@ void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &grap
   if (creationFarm.run_and_wait_end() < 0) {
     return;
   }
-  ff::ffTime(ff::STOP_TIME);
-  std::cout << "Fastflow generation time: " << " " << ff::ffTime(ff::GET_TIME) << "(ms)\n" << std::endl;
+
 }
 
 /***
