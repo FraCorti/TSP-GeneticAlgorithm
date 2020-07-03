@@ -85,14 +85,11 @@ class TSPFastflow : public GeneticAlgorithm {
         : crossoverRate(crossover_rate),
           mutationRate(mutation_rate),
           population(*population),
-          crossoverPopulation(crossover_population), indexSpaceInterval(0, graphNode) {
+          crossoverPopulation(crossover_population), indexSpaceInterval(0, graphNode - 1) {
     }
     std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
       int startIndex = chunk->first;
       int endIndex = chunk->second;
-
-      //! temporary data structure to store crossover results
-      // std::vector<std::vector<Key>> &crossoverPopulation(endIndex - startIndex); //TODO: test if this works
 
       //! generate swapping indexes
       int crossoverStart = indexSpaceInterval(gen);
@@ -120,8 +117,8 @@ class TSPFastflow : public GeneticAlgorithm {
                                == crossoverPopulation.at(endIndex).end();
                      });
       } else {
-        std::copy(population.rbegin()->begin(),
-                  population.rbegin()->end(),
+        std::copy(population.at(endIndex).begin(),
+                  population.at(endIndex).end(),
                   std::back_inserter(crossoverPopulation.at(endIndex)));
       }
 
@@ -182,13 +179,12 @@ class TSPFastflow : public GeneticAlgorithm {
     explicit ChunksEmitter(std::vector<std::pair<int, int>> *chunks, int generationsNumber_)
         : chunks(*chunks), generationsNumber(generationsNumber_) {}
 
-    //TODO: understand if feedback loop notify inside svc method
     std::pair<int, int> *svc(std::pair<int, int> *currentGeneration) override {
       if (generationsNumber <= 0) {
         return this->EOS;
       }
       generationsNumber--;
-      std::for_each(chunks.begin(), chunks.end(), [&](std::pair<int, int> &chunk) {
+      std::for_each(chunks.begin(), chunks.end(), [&](std::pair<int, int> chunk) {
         this->ff_send_out(new std::pair<int, int>(chunk.first, chunk.second));
       });
       return this->GO_ON;
@@ -231,6 +227,34 @@ class TSPFastflow : public GeneticAlgorithm {
     }
   };
 
+  struct CrossoverMutationCollector : ff::ff_node_t<std::pair<int, int>> {
+   private:
+    const int chunksNumber;
+    const int chromosomeNumber;
+    int currentChunksNumber;
+    std::vector<std::vector<Key>> &crossoverPopulation;
+   public:
+    explicit CrossoverMutationCollector(std::vector<std::vector<Key>> &crossover_population,
+                                        int chromosomeNumber,
+                                        int chunks_number)
+        : crossoverPopulation(crossover_population),
+          chromosomeNumber(chromosomeNumber),
+          chunksNumber(chunks_number),
+          currentChunksNumber(chunks_number) {}
+    std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
+      currentChunksNumber--;
+
+      //! if all the chunks have been computed then proceed to the next stage
+      if (currentChunksNumber == 0) {
+        crossoverPopulation.clear();
+        crossoverPopulation.resize(chromosomeNumber);
+        currentChunksNumber = chunksNumber;
+        this->ff_send_out(chunk);
+      }
+      return this->GO_ON;
+    }
+  };
+
   struct ChunksCollector : ff::ff_node_t<std::pair<int, int>> {
    private:
     const int chunksNumber;
@@ -256,8 +280,6 @@ class TSPFastflow : public GeneticAlgorithm {
     std::random_device rd;
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<double> unif{0, 1};
-    const int chunksNumber;
-    int currentChunksNumber; // TODO: understand if remove collector
     std::vector<std::vector<Key>> &population;
     std::vector<std::pair<precision, int>> &chromosomesScoreIndex;
     std::vector<std::vector<Key>> intermediatePopulation;
@@ -266,9 +288,8 @@ class TSPFastflow : public GeneticAlgorithm {
                               std::vector<std::pair<precision, int>> &chromosomes_score_index,
                               const int chunks_number = 0,
                               int seed = 0) : population(*population_),
-                                              chromosomesScoreIndex(chromosomes_score_index),
-                                              chunksNumber(chunks_number),
-                                              currentChunksNumber(chunks_number) {
+                                              chromosomesScoreIndex(chromosomes_score_index)
+                                              {
       intermediatePopulation.resize(population_->size());
       if (seed) {
         gen.seed(seed);
@@ -320,7 +341,7 @@ class TSPFastflow : public GeneticAlgorithm {
       //! fill the vector of new population indexes
       auto randomProbabilitiesIt = randomProbabilities.begin();
       auto indexNewPopulationIt = indexNewPopulation.begin();
-      for (std::pair<double, int> &chromosome: chromosomesScoreIndex) {
+      for (std::pair<precision, int> &chromosome: chromosomesScoreIndex) {
         for (; randomProbabilitiesIt != randomProbabilities.end() && *randomProbabilitiesIt <= chromosome.first;
                randomProbabilitiesIt++, indexNewPopulationIt++) {
           *indexNewPopulationIt = chromosome.second;
@@ -391,26 +412,22 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   std::vector<std::pair<precision, int>> chromosomesScoreIndex(chromosomeNumber);
   std::vector<std::vector<Key>> crossoverPopulation(chromosomeNumber);
 
-  int crossoverThreads = 1; //std::ceil(std::ceil(workers / 2) * crossoverRate);
-  int evaluateThreads = workers;  // tolgo i collector - crossoverThreads;
-
   //! evaluate stage farm
   ChunksEmitter evaluateEmitter(&chunks, generationNumber);
   ChunksCollector evaluateCollector(chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> evaluateWorkers;
-  for (int i = 0; i < evaluateThreads; ++i) {
+  for (int i = 0; i < workers; ++i) {
     evaluateWorkers.push_back(std::make_unique<EvaluateWorker>(&population, chromosomesScoreIndex, &graph));
   }
   ff::ff_Farm<std::pair<int, int>> evaluateFarm(std::move(evaluateWorkers), evaluateEmitter, evaluateCollector);
-
   //! intermediate stage
   FitnessSelection fitnessSelectionStage(&population, chromosomesScoreIndex);
 
   //! crossover and mutation farm
   ChunksEmitter crossoverMutationEmitter(&chunks, generationNumber);
-  ChunksCollector crossoverMutationCollector(chunks.size());
+  CrossoverMutationCollector crossoverMutationCollector(crossoverPopulation, chromosomeNumber, chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> crossoverMutationWorkers;
-  for (int i = 0; i < crossoverThreads; ++i) {
+  for (int i = 0; i < workers; ++i) {
     crossoverMutationWorkers.push_back(std::make_unique<CrossoverMutationWorker>(crossoverRate,
                                                                                  mutationRate,
                                                                                  &population,
@@ -474,7 +491,10 @@ void TSPFastflow<Key, Value>::setupComputation(int &workersNumber, int chromosom
  * @param chromosomeNumber
  */
 template<typename Key, typename Value>
-void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &graph, int chromosomeNumber, int workers, int nodesNumber) {
+void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &graph,
+                                                         int chromosomeNumber,
+                                                         int workers,
+                                                         int nodesNumber) {
   ff::ffTime(ff::START_TIME);
 
   std::vector<std::vector<std::pair<Key, Value>>> initialGeneratedPopulation(chromosomeNumber);
