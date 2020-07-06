@@ -3,15 +3,6 @@
 #include "src/tsp/parallelTSP.h"
 #include "src/tsp/fastflowTSP.h"
 
-#define INITTIME   auto start = std::chrono::high_resolution_clock::now();\
-  auto elapsed = std::chrono::high_resolution_clock::now() - start;\
-  auto usec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();\
-
-#define BEGINTIME start = std::chrono::high_resolution_clock::now();
-#define ENDTIME(s, nw)   elapsed = std::chrono::high_resolution_clock::now() - start; \
-  usec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();\
-  cout << s << "\t" << usec << " usecs with " << nw << " threads " << endl;
-
 int main(int argc, char *argv[]) {
   if (argc < 7) {
     std::cout << "Usage is " << argv[0]
@@ -37,8 +28,9 @@ int main(int argc, char *argv[]) {
   }
 
   Graph<> graph(nodesNumber, seed);
-  //TSPSequential<int, double> tspSequential(graph);
-  //tspSequential.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
+
+  TSPSequential<int, double> tspSequential(graph);
+  // tspSequential.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
 
   TSPParallel<int, double> tspParallel(graph);
   tspParallel.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);

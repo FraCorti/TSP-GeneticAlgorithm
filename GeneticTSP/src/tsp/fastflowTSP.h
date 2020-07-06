@@ -42,7 +42,7 @@ class TSPFastflow : public GeneticAlgorithm {
                       chromosome.end(),
                       [&](std::pair<Key, Value> &cell) -> void {
                         cell.first = mapIt->first;
-                        cell.second = unif(gen);  // TODO: pass a vector<double> and shuffle it everytime (?)
+                        cell.second = unif(gen);
                         mapIt++;
                       });
 
@@ -66,6 +66,9 @@ class TSPFastflow : public GeneticAlgorithm {
     }
   };
 
+  /*** Worker for crossover and mutation phase
+   *
+   */
   struct CrossoverMutationWorker : ff::ff_node_t<std::pair<int, int>> {
    private:
     const double crossoverRate;
@@ -98,7 +101,7 @@ class TSPFastflow : public GeneticAlgorithm {
         std::swap(crossoverStart, crossoverEnd);
       }
 
-      //! Apply Crossover between first and last element
+      //! Apply Crossover between first and last element of the chunk
       if (unif(gen) <= crossoverRate) {
         std::vector<Key> &firstChromosome = population.at(startIndex);
         std::vector<Key> &lastChromosome = population.at(endIndex);
@@ -160,7 +163,7 @@ class TSPFastflow : public GeneticAlgorithm {
         }
       }
 
-      //! store the results in population data structure (try std::transform?)
+      //! store the results in population data structure
       for (int chromosomeIndex = startIndex; chromosomeIndex <= endIndex; chromosomeIndex++) {
         population.at(chromosomeIndex) = crossoverPopulation.at(chromosomeIndex);
       }
@@ -191,7 +194,7 @@ class TSPFastflow : public GeneticAlgorithm {
     }
   };
 
-//! worker node for Evaluate stage
+   //! worker node for Evaluate stage
   struct EvaluateWorker : ff::ff_node_t<std::pair<int, int>> {
    private:
     std::vector<std::vector<Key>> &population;
@@ -244,7 +247,7 @@ class TSPFastflow : public GeneticAlgorithm {
     std::pair<int, int> *svc(std::pair<int, int> *chunk) override {
       currentChunksNumber--;
 
-      //! if all the chunks have been computed then proceed to the next stage
+      //! if all the chunks have been received then proceed to the next stage
       if (currentChunksNumber == 0) {
         crossoverPopulation.clear();
         crossoverPopulation.resize(chromosomeNumber);
@@ -288,8 +291,7 @@ class TSPFastflow : public GeneticAlgorithm {
                               std::vector<std::pair<precision, int>> &chromosomes_score_index,
                               const int chunks_number = 0,
                               int seed = 0) : population(*population_),
-                                              chromosomesScoreIndex(chromosomes_score_index)
-                                              {
+                                              chromosomesScoreIndex(chromosomes_score_index) {
       intermediatePopulation.resize(population_->size());
       if (seed) {
         gen.seed(seed);
@@ -304,7 +306,7 @@ class TSPFastflow : public GeneticAlgorithm {
                       totalScore += scoreIndex.first;
                     });
       double evaluationsAverage = totalScore / chromosomesScoreIndex.size();
-
+      //printBestSolution(chromosomesScoreIndex); // for convergence test purpose
       std::for_each(chromosomesScoreIndex.begin(),
                     chromosomesScoreIndex.end(),
                     [&evaluationsAverage](std::pair<double, int> &chromosome) -> void {
@@ -356,8 +358,9 @@ class TSPFastflow : public GeneticAlgorithm {
             intermediatePopulationIt++;
           });
       population.swap(intermediatePopulation);
-      this->ff_send_out(new std::pair<int, int>(1, 1));
+
       //! proceed to next stage
+      this->ff_send_out(new std::pair<int, int>(1, 1));
       return this->GO_ON;
     }
   };
@@ -373,8 +376,7 @@ class TSPFastflow : public GeneticAlgorithm {
   void generatePopulationFastflow(Graph<Key, Value> &graph,
                                   int chromosomeNumber, int workers, int nodesNumber);
   void setupComputation(int &workersNumber, int chromosomeNumber);
-  void printBestSolution(Graph<Key, Value> &graph,
-                         std::vector<std::pair<precision, int>> &chromosomesScoreIndex);
+  static void printBestSolution(std::vector<std::pair<precision, int>> &chromosomesScoreIndex);
   void printPopulation() const;
  public:
   explicit TSPFastflow(Graph<Key, Value> &graph);
@@ -402,8 +404,7 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   }
   population.clear();
   population.resize(chromosomeNumber);
-  int currentWorkers = workers - 2; //TODO: understand how to assign the threads
-  setupComputation(workers, chromosomeNumber); //TODO: granularity of chunks?
+  setupComputation(workers, chromosomeNumber);
 
   auto start = std::chrono::system_clock::now();
 
@@ -419,9 +420,12 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   ChunksCollector evaluateCollector(chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> evaluateWorkers;
   for (int i = 0; i < workers; ++i) {
-    evaluateWorkers.push_back(std::unique_ptr<EvaluateWorker>(new EvaluateWorker(&population, chromosomesScoreIndex, &graph)));
+    evaluateWorkers.push_back(std::unique_ptr<EvaluateWorker>(new EvaluateWorker(&population,
+                                                                                 chromosomesScoreIndex,
+                                                                                 &graph)));
   }
   ff::ff_Farm<std::pair<int, int>> evaluateFarm(std::move(evaluateWorkers), evaluateEmitter, evaluateCollector);
+
   //! intermediate stage
   FitnessSelection fitnessSelectionStage(&population, chromosomesScoreIndex);
 
@@ -430,11 +434,12 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
   CrossoverMutationCollector crossoverMutationCollector(crossoverPopulation, chromosomeNumber, chunks.size());
   std::vector<std::unique_ptr<ff::ff_node>> crossoverMutationWorkers;
   for (int i = 0; i < workers; ++i) {
-    crossoverMutationWorkers.push_back(std::unique_ptr<CrossoverMutationWorker>(new CrossoverMutationWorker(crossoverRate,
-                                                                                                            mutationRate,
-                                                                                                            &population,
-                                                                                                            crossoverPopulation,
-                                                                                                            graph.GetNodesNumber())));;
+    crossoverMutationWorkers.push_back(std::unique_ptr<CrossoverMutationWorker>(new CrossoverMutationWorker(
+        crossoverRate,
+        mutationRate,
+        &population,
+        crossoverPopulation,
+        graph.GetNodesNumber())));;
   }
   ff::ff_Farm<std::pair<int, int>>
       crossoverMutationFarm(std::move(crossoverMutationWorkers), crossoverMutationEmitter, crossoverMutationCollector);
@@ -446,11 +451,11 @@ void TSPFastflow<Key, Value>::Run(int chromosomeNumber,
     return;
   }
   auto end = std::chrono::system_clock::now();
-  std::cout << "Fastflow time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
+  std::cout << "Fastflow time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms "
             << std::endl;
 }
 
-/***
+/*** Setup chunk data structure and checks number of workers passed in input
  *
  * @param workersNumber
  * @param chromosomeNumber
@@ -496,7 +501,6 @@ void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &grap
                                                          int workers,
                                                          int nodesNumber) {
 
-
   std::vector<std::vector<std::pair<Key, Value>>> initialGeneratedPopulation(chromosomeNumber);
   std::for_each(initialGeneratedPopulation.begin(),
                 initialGeneratedPopulation.end(),
@@ -522,25 +526,25 @@ void TSPFastflow<Key, Value>::generatePopulationFastflow(Graph<Key, Value> &grap
 
 }
 
-/***
+/*** This method is useful if you need to plot the convergence of the algorithm
  *
  * @param graph
  * @param chromosomesScoreIndex
  */
 template<typename Key, typename Value>
-void TSPFastflow<Key, Value>::printBestSolution(Graph<Key, Value> &graph,
-                                                std::vector<std::pair<precision, int>> &chromosomesScoreIndex) {
-  std::vector<Key> &currentBestSolution = population.at(chromosomesScoreIndex.rbegin()->second);
-  double chromosomeScore = 0;
-  for (int i = 0; i < currentBestSolution.size() - 1; i++) {
-    chromosomeScore += graph.GetEdgeValue(currentBestSolution.at(i), currentBestSolution.at(i + 1));
-  }
-  chromosomeScore +=
-      graph.GetEdgeValue(currentBestSolution.at(0), currentBestSolution.at(currentBestSolution.size() - 1));
-  std::cout << chromosomeScore << std::endl;
+void TSPFastflow<Key, Value>::printBestSolution(std::vector<std::pair<precision, int>> &chromosomesScoreIndex) {
+
+  //! sort in ascending order
+  std::sort(chromosomesScoreIndex.begin(),
+            chromosomesScoreIndex.end(),
+            [](const std::pair<precision, int> a, const std::pair<precision, int> b) {
+              return a.first < b.first;
+            });
+
+  std::cout << chromosomesScoreIndex.begin()->first << std::endl;
 }
 
-/** Print current population
+/** Print current population (useful for test purpose)
  */
 template<typename Key, typename Value>
 void TSPFastflow<Key, Value>::printPopulation() const {

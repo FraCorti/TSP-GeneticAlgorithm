@@ -1,0 +1,107 @@
+\documentclass[a4paper, oneside, openany]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lastpage} %info sul # dell'ultima pagina del documento
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage[nottoc]{tocbibind} %Adds "References" to the table of contents
+\usepackage{url}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{color}
+\graphicspath{ {./img/} }
+\usepackage{fancyhdr} %per mod
+%\fancypagestyle{plain}{
+%	% cancella tutti i campi di intestazione e piè di pagina
+%	\fancyhf{}
+	
+	%\lfoot{ %piè di pagina
+	%{\Titolo} \ - \textit{{\Gruppo}}
+	%}
+%	\rfoot{Page \thepage{} of \pageref{LastPage}} %es: pag: 4 di 10
+	
+	%linea orizzontale alle posizioni top e bottom della pagina
+%	\renewcommand{\headrulewidth}{0.2	pt}  
+%	\renewcommand{\footrulewidth}{0.2pt}
+%}
+
+\usepackage{breakurl}%\url{...} può continare alla linea successiva. (si può andare a capo)
+
+\definecolor{Maroon}{cmyk}{0, 0.87, 0.68, 0.32}
+\usepackage[colorlinks=true]{hyperref}
+\hypersetup{
+	colorlinks=true,
+	citecolor=black,
+	filecolor=black,
+	linkcolor=black, % colore dei link interni
+	urlcolor=Maroon  % colore dei link interniesterni
+}
+
+\usepackage{listings}
+
+\usepackage{tikz}
+
+\usepackage{longtable}
+\usepackage{appendix} %aggiunge dei comandi per l'appendice
+\usepackage{parskip} %aiuta LaTeX a trovare il miglior stile per i page break
+\usepackage{setspace}
+%\usepackage[font=footnotesize, labelfont=bf, margin=30pt]{caption}
+%\usepackage[font=scriptsize, labelfont=bf, margin=30pt]{subcaption}
+
+\usepackage{palatino}  %  GITHUB TEXT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+%\usepackage{mathpazo}
+
+
+%\newcommand{\github}[2][13pt]{\hspace{5pt}\faGithub\hspace{5pt}\fontsize{#1}{0}\url{#2}}
+
+
+
+%\title{{\small Università di Pisa, Master Degree in Computer Science \\ Course of ``Parallel and Distributed Systems: Paradigms and Models'' (SPM)} \\ \vspace{0.7em}
+%	\huge{Travelling salesman problem with genetic algorithms} \\\vspace{0.7em}
+%	\large Report of the Final Project for the A.Y. 2019/2020 \\ \vspace{0.4em}} 
+%\author{Francesco Corti \\ \vspace{0.3em}
+%	%\small \href{mailto:cortifrancesco05@gmail.com}{cortifrancesco05@gmail.com} 
+%	\vspace{0.4em}}
+
+%opening
+\title{{\small Università di Pisa, Master Degree in Computer Science Course of ``Parallel and Distributed Systems: Paradigms and Models'' (SPM)} \vspace{0.7em}
+	\huge{\textbf{Travelling salesman problem with genetic algorithms}} \vspace{0.7em}
+	\large Report of the Final Project for the A.Y. 2019/2020 \vspace{0.4em}} 
+\author{Francesco Corti \vspace{0.3em}
+	%\small \href{mailto:cortifrancesco05@gmail.com}{cortifrancesco05@gmail.com} 
+	 \vspace{0.4em}}
+
+\date{\today}
+
+% Definition of \maketitle
+\makeatletter         
+\def\@maketitle{
+	
+	%\includegraphics[width = 40mm]{logo.jpg}\\[8ex]
+	\begin{center}
+		{\@title }\\ 
+		{\@author}\\ 
+		\@date\\[4ex]
+		\includegraphics[scale = 0.35]{logo-Pisa.jpeg}
+\end{center}}
+\makeatother
+
+%Beginning of the document
+\begin{document}
+		\maketitle
+		\begin{abstract}
+			The purpose of the project was to solve Travelling salesman problem, known as \textit{TSP},  by using a Genetic Algorithms approach.
+			In addition to the sequential version used as baseline, two parallel versions were developed, one using standard C++ threads and one using Fastflow \cite{fastflow}. 
+		\end{abstract}
+\vspace{0.3cm}
+
+\input{sez/introduction.tex}
+\input{sez/parallelArchitecture.tex}
+\input{sez/results.tex}
+\input{sez/conclusion.tex}
+\input{sez/appendix.tex}
+\input{sez/references.tex}
+\end{document}

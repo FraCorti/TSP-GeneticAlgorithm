@@ -1,0 +1,19 @@
+Sequential 500x500: 2028
+
+Sequential 500x5000: 20579
+
+Sequential 500x20000: 84038
+
+
+Sequential 1000x500: 5020
+
+Sequential 1000x5000: 51342
+
+Sequential 1000x20000: 209698
+
+
+Sequential 2000x500: 12338
+
+Sequential 2000x5000: 134764
+
+Sequential 2000x20000: 533516

@@ -5,7 +5,6 @@ project(GeneticTSP VERSION 1.0
 
 # find packages
 find_package(Threads REQUIRED)
-find_package(OpenMP REQUIRED)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
@@ -34,6 +33,5 @@ set_target_properties(GeneticAlgorithms PROPERTIES
 # link libraries to main target
 target_link_libraries(GeneticTSP
         GeneticAlgorithms
-        OpenMP::OpenMP_CXX
         Threads::Threads
         )
