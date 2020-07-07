@@ -11,6 +11,7 @@
 #include <ff/farm.hpp>
 #include <ff/pipeline.hpp>
 #include <memory>
+#include <thread>
 
 template<typename Key = int, typename Value = double>
 class TSPFastflow : public GeneticAlgorithm {

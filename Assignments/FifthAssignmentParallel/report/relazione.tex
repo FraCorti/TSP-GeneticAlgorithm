@@ -1,0 +1,62 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage{titling}
+\usepackage[nottoc]{tocbibind} %Adds "References" to the table of contents
+\usepackage{fontawesome}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{color}
+\usepackage{graphicx}
+\graphicspath{ {./img/} }
+\hypersetup{
+	colorlinks=true,
+	linkcolor=black,
+	filecolor=magenta,      
+	urlcolor=blue,
+}
+\usepackage{listings}
+
+
+
+\newcommand{\github}[2][13pt]{\hspace{5pt}\faGithub\hspace{5pt}\fontsize{#1}{0}\url{#2}}
+
+%Document title, author and date (empty)
+\title{Parallel file compressor}
+\author{Francesco Corti - 606922}
+\date{May 2020}
+
+% Definition of \maketitle
+\makeatletter         
+\def\@maketitle{
+	\raggedright
+	%\includegraphics[width = 40mm]{logo.jpg}\\[8ex]
+	\begin{center}
+		{\Huge \bfseries \sffamily \@title }\\[4ex] 
+		{\Large  \@author}\\[4ex] 
+		\@date\\[8ex]
+		\includegraphics[scale = 0.35]{logo-Pisa.jpeg}
+\end{center}}
+\makeatother
+
+%Beginning of the document
+\begin{document}
+		\maketitle
+		\begin{abstract}
+			The purpose of the assignment was to implement a parallel file compressor using building blocks provided by \href{https://github.com/fastflow/fastflow}{Fastflow} library and \href{https://github.com/richgel999/miniz}{Miniz} open source compressor library. 
+		\end{abstract}
+\vspace{0.3cm}
+
+\section{Code structure}
+The program has a single file \textit{ffc\_farm.cpp} that take: \textit{nworkers threshold file-or-directory} as input arguments. This can be compiled using the Makefile provided. The program expose three main component that are join together using the \textit{ff\_pipeline} object available inside the \textit{FastFlow} library. These three components are the \textit{Reader}, the \textit{Compressor} and the \textit{Write} struct. These three structs implement the pure virtual method \textit{svc()} from the upper class \textit{ff\_node$<$T$>$} that is the standard \textit{Fastflow} node.
+
+\section{Problems faced}
+The first problem that I faced was to deal with the split of the file in multiple chunks. To deal with the split of the big file in chunks I had to modify the \textit{Task} object that was already given in the file. I added two new parameters: \textit{chunkPointer} and \textit{chunkName}. This was used to compress the correct chunk part of the file and to recognize the part of the file that was compressed in the chunk. 
+
+The second problem that I faced was to store in the correct position all the compressed chunks produced by the \textit{Compressor} struct and received in \textit{svc()} method of the \textit{Writer} struct. I used the \href{https://en.cppreference.com/w/cpp/filesystem}{filesystem} library available from C++17. This library was recently integrated into the standard library to replace the \textit{Boost::filesytem} and let the programmer manage in a very simple way the filesystem. The program creates a \textit{Files} folder and when a new chunk \textit{arrive} in \textit{Writer}, it checks if exists already a directory inside \textit{Files} to store all the compressed chunks of a specific file. If there isn't it creates the directory and then stores the compressed file inside it. Otherwise store directly the chunk inside the correct directory. To store all the compressed file in a single file I exploit the definition of the \textit{svc\_end()} method present in \textit{Fastflow}. Indeed this method is called after the \textit{svc()} method is ended, so in our case all the compressed chunks have already been stored inside their folder, inside the \textit{Files} directory. So at the end the program moves itself inside the folder \textit{Files} using the \textit{chdir} method and then iterate inside the directory calling the command \textit{tar -zcf}on the directory containing all the compressed chunk of a specific file. This zipped folder is then stored inside \textit{mergeZippedFiles} folder and after all the folders containing the compressed chunks are stored the \textit{Files} folder is deleted.
+\end{document}

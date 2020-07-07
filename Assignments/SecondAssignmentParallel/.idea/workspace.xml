@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated>
+      <config projectName="SecondAssignmentParallel" targetName="SecondAssignmentParallel" />
+      <config projectName="SecondAssignmentParallel" targetName="MasterWorker" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" />
+      <configuration PROFILE_NAME="Release-Xeon Remote" CONFIG_NAME="Release" TOOLCHAIN_NAME="Xeon Remote" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="bbf96c5c-c0d1-4db0-b7da-4a08732e8d93" name="Default Changelist" comment="Add Fastflow parallelFor implementation">
+      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/checco.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main" beforeDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Francesco &lt;cortifrancesco05@gmail.com&gt;" />
+        <option value="Francesco &lt;cortifrancesco05@gmail.comde&gt;" />
+      </list>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
+  <component name="OCResolveContextSettings">
+    <option name="configuration" value="2-SecondAssignmentParallel" />
+  </component>
+  <component name="ProjectId" id="1aqJP6IzHtuBDiSISkJUSfeICnX" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/benchmark" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/benchmark" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="CMake Application.SecondAssignmentParallel">
+    <configuration name="MasterWorker" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SecondAssignmentParallel" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="0 500 1" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="SecondAssignmentParallel" RUN_TARGET_NAME="SecondAssignmentParallel" EXPLICIT_BUILD_TARGET_NAME="all">
+      <envs>
+        <env name="ff_DIR" value="/opt/fastflow/fastflow/cmake.modules/" />
+      </envs>
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="CMake Application.MasterWorker" />
+      <item itemvalue="CMake Application.SecondAssignmentParallel" />
+    </list>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bbf96c5c-c0d1-4db0-b7da-4a08732e8d93" name="Default Changelist" comment="" />
+      <created>1587457163902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1587457163902</updated>
+      <workItem from="1587457165408" duration="26000" />
+      <workItem from="1587458701620" duration="3993000" />
+      <workItem from="1587463660019" duration="160000" />
+      <workItem from="1587557140588" duration="4520000" />
+      <workItem from="1587569842442" duration="3099000" />
+      <workItem from="1587630754502" duration="6268000" />
+      <workItem from="1587637283485" duration="3836000" />
+      <workItem from="1587647655026" duration="10309000" />
+      <workItem from="1587673128300" duration="5321000" />
+      <workItem from="1587716969158" duration="2671000" />
+      <workItem from="1587733397659" duration="11433000" />
+      <workItem from="1587824332366" duration="11000" />
+    </task>
+    <task id="LOCAL-00001" summary="Fastflow farm primes complete">
+      <created>1587655834800</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1587655834800</updated>
+    </task>
+    <task id="LOCAL-00002" summary="small fix">
+      <created>1587656558677</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1587656558678</updated>
+    </task>
+    <task id="LOCAL-00003" summary="delete unused variable">
+      <created>1587656927149</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1587656927149</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add Fastflow parallelFor implementation">
+      <created>1587677491603</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1587677491603</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add files and img">
+      <created>1587748592961</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1587748592961</updated>
+    </task>
+    <task id="LOCAL-00006" summary="add speedup and scalability curves">
+      <created>1587749425957</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1587749425957</updated>
+    </task>
+    <task id="LOCAL-00007" summary="fix README">
+      <created>1587749555858</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1587749555858</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fastflow farm primes complete" />
+    <MESSAGE value="small fix" />
+    <MESSAGE value="delete unused variable" />
+    <MESSAGE value="Add Fastflow parallelFor implementation" />
+    <MESSAGE value="Add files and img" />
+    <MESSAGE value="add speedup and scalability curves" />
+    <MESSAGE value="fix README" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix README" />
+    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
+  </component>
+</project>
