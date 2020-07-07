@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
   if (argc < 7) {
     std::cout << "Usage is " << argv[0]
-              << " nodesNumber chromosomesNumber generationNumber mutationRate crossoverRate workersNumber seed filePath"
+              << " nodesNumber chromosomesNumber generationNumber mutationRate crossoverRate workersNumber [seed]"
               << std::endl;
     return (-1);
   }
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   Graph<> graph(nodesNumber, seed);
 
   TSPSequential<int, double> tspSequential(graph);
-  // tspSequential.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
+  tspSequential.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
 
   TSPParallel<int, double> tspParallel(graph);
   tspParallel.Run(chromosomesNumber, generationNumber, mutationRate, crossoverRate, workerNumber, seed);
