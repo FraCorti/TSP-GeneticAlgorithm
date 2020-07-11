@@ -4,7 +4,7 @@ The purpose of the project was to solve [Travelling Salesman Problem](https://en
 To test the correcteness of the three version developed, I saved for a run of each version the current best route for each generation of the algorithm. In the following plots the length of the best path decrease as the algorithm go on with the generation, so convergence algorithms were obtained. 
 
 
-<img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/convergence/fastflowConvergenceREADME.png" width="300"/> <img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/convergence/sequentialConvergenceREADME.png" width="300"/> <img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/convergence/standardConvergenceREADME.png" width="300"/>
+<img src="GeneticTSP/report/benchmark/convergence/fastflowConvergenceREADME.png" width="300"/> <img src="GeneticTSP/report/benchmark/convergence/sequentialConvergenceREADME.png" width="300"/> <img src="GeneticTSP/report/benchmark/convergence/standardConvergenceREADME.png" width="300"/>
 
 
 ## Running the project
@@ -28,11 +28,11 @@ To run the program correctly, you need to pass to the executable the following p
 ## Results 
 Each version of the program was tested on a Intel Xeon PHI machine from 1 to 256 thread. The tests were done with 10 generation and 20000 chromosomes and considering [500, 1000, 2000] nodes in the graph. The following speedup curves were obtained:<br/><br/>
  
-<img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/curves/speedup_zoom_2000_20000_README.png" height="50%" width="50%"> <br/>
+<img src="GeneticTSP/report/benchmark/curves/speedup_zoom_2000_20000_README.png" height="50%" width="50%"> <br/>
 
-<img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/curves/speedup_zoom_1000_20000_README.png" height="50%" width="50%"><br/>
+<img src="GeneticTSP/report/benchmark/curves/speedup_zoom_1000_20000_README.png" height="50%" width="50%"><br/>
 
-<img src="https://github.com/FraCorti/TSP-GeneticAlgorithm/GeneticTSP/report/benchmark/curves/speedup_zoom_500_20000_README.png" height="50%" width="50%">
+<img src="GeneticTSP/report/benchmark/curves/speedup_zoom_500_20000_README.png" height="50%" width="50%">
 
 ## Acknowledgments
 This project was developed for the the course of [Parallel and Distributed Systems](http://didawiki.di.unipi.it/doku.php/magistraleinformaticanetworking/spm/sdpm09support) at University of Pisa under the guide of [Prof. Marco Danelutto](http://calvados.di.unipi.it/paragroup/danelutto/) and [Prof. Massimo Torquati](http://calvados.di.unipi.it/paragroup/torquati/).
