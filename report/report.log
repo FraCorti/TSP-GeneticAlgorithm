@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.2)  6 JUL 2020 23:56
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.2)  7 JUL 2020 19:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**relazione.tex
-(./relazione.tex
+**report.tex
+(./report.tex
 LaTeX2e <2018-12-01>
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2018/09/03 v1.4i Standard LaTeX document class
@@ -676,15 +676,8 @@ Package: palatino 2005/04/12 PSNFSS-v9.2a (SPQR)
 LaTeX Warning: Unused global option(s):
     [openany].
 
-(./relazione.aux
-
-LaTeX Warning: Label `fig:scalability2000' multiply defined.
-
-
-LaTeX Warning: Label `fig:scalability2000' multiply defined.
-
-)
-\openout1 = `relazione.aux'.
+No file report.aux.
+\openout1 = `report.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 93.
 LaTeX Font Info:    ... okay on input line 93.
@@ -701,7 +694,7 @@ LaTeX Font Info:    ... okay on input line 93.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 93.
 LaTeX Font Info:    ... okay on input line 93.
 LaTeX Font Info:    Try loading font information for T1+ppl on input line 93.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ppl.fd
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ppl.fd
 File: t1ppl.fd 2001/06/04 font definitions for T1/ppl.
 )
 Package lastpage Info: Please have a look at the pageslts package at
@@ -786,10 +779,8 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 93.
 LaTeX Info: Redefining \pageref on input line 93.
 LaTeX Info: Redefining \nameref on input line 93.
-
-(./relazione.out) (./relazione.out)
 \@outlinefile=\write4
-\openout4 = `relazione.out'.
+\openout4 = `report.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: listings package is loaded.
@@ -804,20 +795,55 @@ Package caption Info: End \AtBeginDocument code.
 ABD: EveryShipout initializing macros
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <20.74> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 95.
-<logo-Pisa.jpeg, id=59, 287.0725pt x 293.095pt>
+
+
+! LaTeX Error: There's no line here to end.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.95 		\begin
+             {abstract}
+? 
+
+! LaTeX Error: There's no line here to end.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.95 		\begin
+             {abstract}
+? 
+<logo-Pisa.jpeg, id=7, 287.0725pt x 293.095pt>
 File: logo-Pisa.jpeg Graphic file (type jpg)
 <use logo-Pisa.jpeg>
 Package pdftex.def Info: logo-Pisa.jpeg  used on input line 95.
 (pdftex.def)             Requested size: 100.47687pt x 102.58478pt.
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <9> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 95.
- (./sez/introduction.tex
+
+LaTeX Warning: Citation `fastflow' on page 1 undefined on input line 97.
+
+(./sez/introduction.tex
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <14.4> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 1.
- [1
+LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <10> not available
+(Font)              Font shape `T1/ppl/b/n' tried instead on input line 5.
+
+
+LaTeX Warning: Citation `genetic-algorithm-tutorial' on page 1 undefined on inp
+ut line 5.
+
+
+LaTeX Warning: Reference `algorithmsConvergence' on page 1 undefined on input l
+ine 7.
+
+[1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./logo-Pisa.jpeg>]
-<benchmark/convergence/sequentialConvergence.png, id=75, 481.8pt x 361.35pt>
+<benchmark/convergence/sequentialConvergence.png, id=19, 481.8pt x 361.35pt>
 File: benchmark/convergence/sequentialConvergence.png Graphic file (type png)
 <use benchmark/convergence/sequentialConvergence.png>
 Package pdftex.def Info: benchmark/convergence/sequentialConvergence.png  used 
@@ -827,13 +853,13 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 14.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 14.
-<benchmark/convergence/standardConvergence.png, id=76, 481.8pt x 361.35pt>
+<benchmark/convergence/standardConvergence.png, id=20, 481.8pt x 361.35pt>
 File: benchmark/convergence/standardConvergence.png Graphic file (type png)
 <use benchmark/convergence/standardConvergence.png>
 Package pdftex.def Info: benchmark/convergence/standardConvergence.png  used on
  input line 16.
 (pdftex.def)             Requested size: 133.84424pt x 100.38333pt.
-<benchmark/convergence/fastflowConvergence.png, id=77, 481.8pt x 361.35pt>
+<benchmark/convergence/fastflowConvergence.png, id=21, 481.8pt x 361.35pt>
 File: benchmark/convergence/fastflowConvergence.png Graphic file (type png)
 <use benchmark/convergence/fastflowConvergence.png>
 Package pdftex.def Info: benchmark/convergence/fastflowConvergence.png  used on
@@ -841,18 +867,24 @@ Package pdftex.def Info: benchmark/convergence/fastflowConvergence.png  used on
 (pdftex.def)             Requested size: 133.84424pt x 100.38333pt.
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <12> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 26.
-LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <10> not available
-(Font)              Font shape `T1/ppl/b/n' tried instead on input line 28.
 )
-(./sez/parallelArchitecture.tex [2 <./benchmark/convergence/sequentialConvergen
-ce.png (PNG copy)> <./benchmark/convergence/standardConvergence.png (PNG copy)>
- <./benchmark/convergence/fastflowConvergence.png (PNG copy)>]
-<./img/1000nodes6.png, id=91, 1152.305pt x 539.01375pt>
+(./sez/parallelArchitecture.tex
+
+LaTeX Warning: Citation `algo-eng' on page 2 undefined on input line 2.
+
+[2 <./benchmark/convergence/sequentialConvergence.png (PNG copy)> <./benchmark/
+convergence/standardConvergence.png (PNG copy)> <./benchmark/convergence/fastfl
+owConvergence.png (PNG copy)>]
+
+LaTeX Warning: Reference `fig:pie-chart-times' on page 3 undefined on input lin
+e 4.
+
+<./img/1000nodes6.png, id=36, 1152.305pt x 539.01375pt>
 File: ./img/1000nodes6.png Graphic file (type png)
 <use ./img/1000nodes6.png>
 Package pdftex.def Info: ./img/1000nodes6.png  used on input line 10.
 (pdftex.def)             Requested size: 230.04079pt x 107.60344pt.
-<./img/5000nodes5.png, id=92, 1152.305pt x 501.875pt>
+<./img/5000nodes5.png, id=37, 1152.305pt x 501.875pt>
 File: ./img/5000nodes5.png Graphic file (type png)
 <use ./img/5000nodes5.png>
 Package pdftex.def Info: ./img/5000nodes5.png  used on input line 15.
@@ -862,7 +894,11 @@ Overfull \hbox (50.19476pt too wide) in paragraph at lines 9--19
  [][][] 
  []
 
-<./img/geneticAlgorithmStructure.png, id=94, 1442.38875pt x 292.09125pt>
+
+LaTeX Warning: Citation `genetic-algorithm-tutorial' on page 3 undefined on inp
+ut line 22.
+
+<./img/geneticAlgorithmStructure.png, id=38, 1442.38875pt x 292.09125pt>
 File: ./img/geneticAlgorithmStructure.png Graphic file (type png)
 <use ./img/geneticAlgorithmStructure.png>
 Package pdftex.def Info: ./img/geneticAlgorithmStructure.png  used on input lin
@@ -870,7 +906,11 @@ e 28.
 (pdftex.def)             Requested size: 313.69025pt x 63.52042pt.
 [3 <./img/1000nodes6.png> <./img/5000nodes5.png> <./img/geneticAlgorithmStructu
 re.png>]
-<./img/standardMasterWorker.png, id=105, 931.48pt x 352.31625pt>
+
+LaTeX Warning: Reference `fig:standardStructure' on page 4 undefined on input l
+ine 37.
+
+<./img/standardMasterWorker.png, id=48, 931.48pt x 352.31625pt>
 File: ./img/standardMasterWorker.png Graphic file (type png)
 <use ./img/standardMasterWorker.png>
 Package pdftex.def Info: ./img/standardMasterWorker.png  used on input line 41.
@@ -881,33 +921,57 @@ Overfull \hbox (41.82791pt too wide) in paragraph at lines 41--43
  [][] 
  []
 
+
+LaTeX Warning: Reference `fig:standardStructure' on page 4 undefined on input l
+ine 48.
+
+
+LaTeX Warning: Reference `sez:architecture' on page 4 undefined on input line 4
+8.
+
+
+LaTeX Warning: Reference `fig:pie-chart-times' on page 4 undefined on input lin
+e 48.
+
+
+LaTeX Warning: Citation `fastflow' on page 4 undefined on input line 51.
+
+
+LaTeX Warning: Reference `fig:pie-chart-times' on page 4 undefined on input lin
+e 51.
+
 [4 <./img/standardMasterWorker.png>]
-<./img/fastflowMainStructure.png, id=117, 785.93625pt x 352.31625pt>
+<./img/fastflowMainStructure.png, id=56, 785.93625pt x 352.31625pt>
 File: ./img/fastflowMainStructure.png Graphic file (type png)
 <use ./img/fastflowMainStructure.png>
 Package pdftex.def Info: ./img/fastflowMainStructure.png  used on input line 56
 .
 (pdftex.def)             Requested size: 418.25368pt x 187.49547pt.
+
+
+LaTeX Warning: Reference `fig:fastflowStructure' on page 5 undefined on input l
+ine 63.
+
 ) (./sez/results.tex [5 <./img/fastflowMainStructure.png>]
-<benchmark/curves/speedup_standard_2000_20000.png, id=125, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_standard_2000_20000.png, id=65, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_standard_2000_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_standard_2000_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_standard_2000_20000.png  used
  on input line 8.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/speedup_zoom_2000_20000.png, id=126, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_zoom_2000_20000.png, id=66, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_zoom_2000_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_zoom_2000_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_zoom_2000_20000.png  used on 
 input line 13.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/speedup_standard_1000_20000.png, id=127, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_standard_1000_20000.png, id=67, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_standard_1000_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_standard_1000_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_standard_1000_20000.png  used
  on input line 21.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/speedup_zoom_1000_20000.png, id=128, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_zoom_1000_20000.png, id=68, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_zoom_1000_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_zoom_1000_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_zoom_1000_20000.png  used on 
@@ -915,27 +979,27 @@ input line 26.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
  [6 <./benchmark/curves/speedup_standard_2000_20000.png (PNG copy)> <./benchmar
 k/curves/speedup_zoom_2000_20000.png (PNG copy)>]
-<benchmark/curves/speedup_standard_500_20000.png, id=134, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_standard_500_20000.png, id=76, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_standard_500_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_standard_500_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_standard_500_20000.png  used 
 on input line 35.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/speedup_zoom_500_20000.png, id=135, 481.8pt x 361.35pt>
+<benchmark/curves/speedup_zoom_500_20000.png, id=77, 481.8pt x 361.35pt>
 File: benchmark/curves/speedup_zoom_500_20000.png Graphic file (type png)
 <use benchmark/curves/speedup_zoom_500_20000.png>
 Package pdftex.def Info: benchmark/curves/speedup_zoom_500_20000.png  used on i
 nput line 40.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/scalability_standard_2000_20000.png, id=136, 481.8pt x 361.35
-pt>
+<benchmark/curves/scalability_standard_2000_20000.png, id=78, 481.8pt x 361.35p
+t>
 File: benchmark/curves/scalability_standard_2000_20000.png Graphic file (type p
 ng)
 <use benchmark/curves/scalability_standard_2000_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_standard_2000_20000.png  
 used on input line 50.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/scalability_zoom_2000_20000.png, id=137, 481.8pt x 361.35pt>
+<benchmark/curves/scalability_zoom_2000_20000.png, id=79, 481.8pt x 361.35pt>
 File: benchmark/curves/scalability_zoom_2000_20000.png Graphic file (type png)
 <use benchmark/curves/scalability_zoom_2000_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_zoom_2000_20000.png  used
@@ -945,69 +1009,80 @@ Package pdftex.def Info: benchmark/curves/scalability_zoom_2000_20000.png  used
 k/curves/speedup_zoom_1000_20000.png (PNG copy)> <./benchmark/curves/speedup_st
 andard_500_20000.png (PNG copy)> <./benchmark/curves/speedup_zoom_500_20000.png
  (PNG copy)>]
-<benchmark/curves/scalability_standard_1000_20000.png, id=145, 481.8pt x 361.35
-pt>
+<benchmark/curves/scalability_standard_1000_20000.png, id=87, 481.8pt x 361.35p
+t>
 File: benchmark/curves/scalability_standard_1000_20000.png Graphic file (type p
 ng)
 <use benchmark/curves/scalability_standard_1000_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_standard_1000_20000.png  
 used on input line 64.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/scalability_zoom_1000_20000.png, id=146, 481.8pt x 361.35pt>
+<benchmark/curves/scalability_zoom_1000_20000.png, id=88, 481.8pt x 361.35pt>
 File: benchmark/curves/scalability_zoom_1000_20000.png Graphic file (type png)
 <use benchmark/curves/scalability_zoom_1000_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_zoom_1000_20000.png  used
  on input line 69.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/scalability_standard_500_20000.png, id=147, 481.8pt x 361.35p
-t>
+<benchmark/curves/scalability_standard_500_20000.png, id=89, 481.8pt x 361.35pt
+>
 File: benchmark/curves/scalability_standard_500_20000.png Graphic file (type pn
 g)
 <use benchmark/curves/scalability_standard_500_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_standard_500_20000.png  u
 sed on input line 78.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-<benchmark/curves/scalability_zoom_500_20000.png, id=148, 481.8pt x 361.35pt>
+<benchmark/curves/scalability_zoom_500_20000.png, id=90, 481.8pt x 361.35pt>
 File: benchmark/curves/scalability_zoom_500_20000.png Graphic file (type png)
 <use benchmark/curves/scalability_zoom_500_20000.png>
 Package pdftex.def Info: benchmark/curves/scalability_zoom_500_20000.png  used 
 on input line 83.
 (pdftex.def)             Requested size: 209.12683pt x 156.84413pt.
-)
-(./sez/conclusion.tex [8 <./benchmark/curves/scalability_standard_2000_20000.pn
-g (PNG copy)> <./benchmark/curves/scalability_zoom_2000_20000.png (PNG copy)> <
-./benchmark/curves/scalability_standard_1000_20000.png (PNG copy)> <./benchmark
-/curves/scalability_zoom_1000_20000.png (PNG copy)>]
+) (./sez/conclusion.tex [8 <./benchmark/curves/scalability_standard_2000_20000.
+png (PNG copy)> <./benchmark/curves/scalability_zoom_2000_20000.png (PNG copy)>
+ <./benchmark/curves/scalability_standard_1000_20000.png (PNG copy)> <./benchma
+rk/curves/scalability_zoom_1000_20000.png (PNG copy)>]
 LaTeX Font Info:    Try loading font information for T1+pcr on input line 9.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
+ (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
-)) (./sez/appendix.tex
-[9 <./benchmark/curves/scalability_standard_500_20000.png (PNG copy)> <./benchm
-ark/curves/scalability_zoom_500_20000.png (PNG copy)>]) (./sez/references.tex)
+))
+(./sez/appendix.tex [9 <./benchmark/curves/scalability_standard_500_20000.png (
+PNG copy)> <./benchmark/curves/scalability_zoom_500_20000.png (PNG copy)>])
+(./sez/references.tex)
+
+Package lastpage Warning: Rerun to get the references right on input line 107.
+
 
 AED: lastpage setting LastPage
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 107.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 107.
-(./relazione.aux)
+(./report.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 107.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 107.
-Package rerunfilecheck Info: File `relazione.out' has not changed.
-(rerunfilecheck)             Checksum: AAB7F45892476F4E7B04A8B3AE09B6B3;779.
 
 
-LaTeX Warning: There were multiply-defined labels.
+Package rerunfilecheck Warning: File `report.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `report.out':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  AAB7F45892476F4E7B04A8B3AE09B6B3;779.
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 107.
  ) 
 Here is how much of TeX's memory you used:
- 20298 strings out of 492609
- 370668 string characters out of 6131463
- 466235 words of memory out of 5000000
- 23775 multiletter control sequences out of 15000+600000
+ 20278 strings out of 492609
+ 370371 string characters out of 6131463
+ 465279 words of memory out of 5000000
+ 23761 multiletter control sequences out of 15000+600000
  22055 words of font info for 39 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 55i,8n,77p,1235b,547s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 55i,8n,77p,1232b,547s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/
@@ -1015,10 +1090,10 @@ fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/t
 ype1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/pala
 tino/uplb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/palatino/uplr8a.
 pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on relazione.pdf (9 pages, 882280 bytes).
+Output written on report.pdf (9 pages, 881720 bytes).
 PDF statistics:
- 199 PDF objects out of 1000 (max. 8388607)
- 152 compressed objects within 2 object streams
+ 145 PDF objects out of 1000 (max. 8388607)
+ 99 compressed objects within 1 object stream
  39 named destinations out of 1000 (max. 500000)
- 222 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 118 words of extra memory for PDF output out of 10000 (max. 10000000)
 

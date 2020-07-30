@@ -97,7 +97,7 @@ void TSPSequential<Key, Value>::Run(const int chromosomeNumber,
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
                                                    const int chromosomeNumber) {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   std::vector<std::vector<std::pair<Key, Value>>>
       populationToSort(chromosomeNumber);
 
@@ -142,7 +142,7 @@ void TSPSequential<Key, Value>::generatePopulation(Graph<Key, Value> &graph,
                   populationToSortIt++;
                 });
   auto end = std::chrono::system_clock::now();
-  //std::cout << "Generation sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  std::cout << "Generation sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
   //printPopulation();
 
 }
@@ -154,7 +154,7 @@ template<typename Key, typename Value>
 void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
                                          std::vector<std::pair<precision , int>> &chromosomesScoreIndex,
                                          double &evaluationsAverage) {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   int chromosomeSize = population.begin()->size();
   auto chromosomesScoreIndexIt = chromosomesScoreIndex.begin();
   int currentChromosomePosition = 0;
@@ -175,8 +175,8 @@ void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
                   currentChromosomePosition++;
                 });
   evaluationsAverage /= chromosomesScoreIndex.size();
-  //auto end = std::chrono::system_clock::now();
-  //std::cout << "Evaluate sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  auto end = std::chrono::system_clock::now();
+  std::cout << "Evaluate sequential time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
 }
 
@@ -187,7 +187,7 @@ void TSPSequential<Key, Value>::evaluate(Graph<Key, Value> &graph,
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &chromosomesScoreIndex,
                                         const double evaluationsAverage) const {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   //! for each chromosome compute and store probability of survive
   std::for_each(chromosomesScoreIndex.begin(),
                 chromosomesScoreIndex.end(),
@@ -203,8 +203,8 @@ void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &
               return a.first < b.first;
             });
 
-  //auto end = std::chrono::system_clock::now();
-  //std::cout << "Fitness time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"  << std::endl;
+  auto end = std::chrono::system_clock::now();
+  std::cout << "Fitness time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"  << std::endl;
 }
 
 /*** Produce the intermediate population based on the probability of reproduction computed before then
@@ -215,7 +215,7 @@ void TSPSequential<Key, Value>::fitness(std::vector<std::pair<precision, int>> &
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>> &chromosomesProbabilityIndex,
                                           std::vector<std::vector<Key>> &intermediatePopulation) {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   double probabilitiesSum = 0;
   std::vector<precision> randomProbabilities(chromosomesProbabilityIndex.size());
   std::vector<int> indexNewPopulation(chromosomesProbabilityIndex.size());
@@ -252,8 +252,8 @@ void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>>
         *intermediatePopulationIt = population.at(index);
         intermediatePopulationIt++;
       });
-  //auto end = std::chrono::system_clock::now();
-  //std::cout << "Selection time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  auto end = std::chrono::system_clock::now();
+  std::cout << "Selection time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
 }
 
@@ -263,7 +263,7 @@ void TSPSequential<Key, Value>::selection(std::vector<std::pair<precision, int>>
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &intermediatePopulation,
                                           const double crossoverRate) {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   std::random_shuffle(intermediatePopulation.begin(), intermediatePopulation.end());
   std::uniform_int_distribution<int> indexSpaceInterval(0, intermediatePopulation.begin()->size() - 1);
   std::vector<std::vector<Key>> crossoverPopulation(intermediatePopulation.size());
@@ -324,8 +324,8 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
     crossoverPopulationIt++;
   }
   crossoverPopulation.swap(intermediatePopulation);
-  //auto end = std::chrono::system_clock::now();
-  //std::cout << "Crossover time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  auto end = std::chrono::system_clock::now();
+  std::cout << "Crossover time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
 }
 
@@ -336,7 +336,7 @@ void TSPSequential<Key, Value>::crossover(std::vector<std::vector<Key>> &interme
 template<typename Key, typename Value>
 void TSPSequential<Key, Value>::mutation(std::vector<std::vector<Key>> &intermediatePopulation,
                                          const double mutationRate) {
-  //auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::system_clock::now();
   std::uniform_int_distribution<int> randomIndexes(0, intermediatePopulation.begin()->size() - 1);
 
   std::for_each(intermediatePopulation.begin(),
@@ -349,7 +349,7 @@ void TSPSequential<Key, Value>::mutation(std::vector<std::vector<Key>> &intermed
                 });
 
   auto end = std::chrono::system_clock::now();
-  //std::cout << "Mutation time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+  std::cout << "Mutation time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
 }
 

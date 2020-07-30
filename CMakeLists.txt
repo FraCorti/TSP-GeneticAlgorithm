@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ftree-vectorize") # vectorization info -fopt-i
 add_executable(GeneticTSP main.cpp)
 add_library(GeneticAlgorithms
         STATIC
-        src/graph/graph.h
+        src/graph/graph.h   
         src/tsp/sequentialTSP.h
         src/tsp/fastflowTSP.h
         src/tsp/geneticAlgorithm.h
